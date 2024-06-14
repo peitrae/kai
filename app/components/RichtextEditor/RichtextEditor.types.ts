@@ -5,6 +5,7 @@ export interface RichtextEditorProps {
   initialValue?: Descendant[];
   placeholder?: string;
   className?: string;
+  onChange?: (value: Descendant[]) => void;
 }
 
 export interface RichtextButtonProps {

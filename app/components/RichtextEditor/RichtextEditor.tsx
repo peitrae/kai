@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useEffect, useState } from "react";
-import { Descendant, createEditor } from "slate";
+import { createEditor } from "slate";
 import {
   Editable,
   ReactEditor,
@@ -34,7 +34,6 @@ import {
   toggleMark,
   withHtml,
 } from "./RichtextEditor.utils";
-import debounce from "~/utils/debounce";
 
 import styles from "./RichtextEditor.module.sass";
 import { RichtextButtonProps, RichtextEditorProps } from ".";
@@ -159,6 +158,7 @@ const RichtextEditor = ({
   initialValue = initial,
   placeholder,
   className,
+  onChange,
 }: RichtextEditorProps) => {
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
@@ -174,10 +174,6 @@ const RichtextEditor = ({
 
   useEffect(() => ReactEditor.focus(editor), []);
 
-  const onEditorChange = debounce((values: Descendant[]) => {
-    console.log(values);
-  }, 1000);
-
   const handleHotkey = (event: KeyboardEventLike) => {
     for (const hotkey in HOTKEYS) {
       if (!isHotkey(hotkey, event)) return;
@@ -189,11 +185,7 @@ const RichtextEditor = ({
 
   return (
     <div className={classNames(styles.container, className)}>
-      <Slate
-        editor={editor}
-        initialValue={initialValue}
-        onChange={onEditorChange}
-      >
+      <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
         <RichtextToolbar />
         <Editable
           className={styles.editor}
