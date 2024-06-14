@@ -36,6 +36,7 @@ import {
 } from "react-icons/bs";
 import classNames from "classnames";
 import { withHistory } from "slate-history";
+import { withHtml } from "./RichtextEditor.utils";
 
 const LIST_TYPES = ["numbered-list", "bulleted-list"];
 const TEXT_ALIGN_TYPES = ["left", "center", "right", "justify"];
@@ -231,7 +232,9 @@ const RichtextEditor = ({
   initialValue = initial,
   placeholder,
 }: RichtextEditorProps) => {
-  const [editor] = useState(() => withReact(withHistory(createEditor())));
+  const [editor] = useState(() =>
+    withHtml(withReact(withHistory(createEditor())))
+  );
   const renderElement = useCallback(
     (props: RenderElementProps) => <Element {...props} />,
     []
