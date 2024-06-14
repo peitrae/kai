@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useState } from "react";
 import {
   BaseEditor,
   Descendant,
@@ -7,14 +7,21 @@ import {
   Element as SlateElement,
   Transforms,
 } from "slate";
-import { Editable, ReactEditor, Slate, useSlate, withReact } from "slate-react";
+import {
+  Editable,
+  ReactEditor,
+  RenderElementProps,
+  RenderLeafProps,
+  Slate,
+  useSlate,
+  withReact,
+} from "slate-react";
 
 import debounce from "~/utils/debounce";
 
 import styles from "./RichtextEditor.module.sass";
 import { RichtextButtonProps, RichtextEditorProps } from ".";
 import {
-  BsBlockquoteLeft,
   BsJustify,
   BsJustifyLeft,
   BsJustifyRight,
@@ -153,7 +160,6 @@ const RichtextToolbar = () => (
     <RichtextMarkButton format="underline" icon={BsTypeUnderline} />
     <RichtextBlockButton format="heading-one" icon={BsTypeH1} />
     <RichtextBlockButton format="heading-two" icon={BsTypeH2} />
-    <RichtextBlockButton format="block-quote" icon={BsBlockquoteLeft} />
     <RichtextBlockButton format="numbered-list" icon={BsListOl} />
     <RichtextBlockButton format="bulleted-list" icon={BsListUl} />
     <RichtextBlockButton format="left" icon={BsJustifyLeft} />
@@ -162,6 +168,57 @@ const RichtextToolbar = () => (
     <RichtextBlockButton format="justify" icon={BsJustify} />
   </div>
 );
+
+const Element = ({ attributes, children, element }: RenderElementProps) => {
+  const style: CSSProperties = { textAlign: element.align };
+
+  switch (element.type) {
+    case "bulleted-list":
+      return (
+        <ul className={styles.ul} style={style} {...attributes}>
+          {children}
+        </ul>
+      );
+    case "heading-one":
+      return (
+        <h1 className={styles.h1} style={style} {...attributes}>
+          {children}
+        </h1>
+      );
+    case "heading-two":
+      return (
+        <h2 className={styles.h2} style={style} {...attributes}>
+          {children}
+        </h2>
+      );
+    case "list-item":
+      return (
+        <li className={styles.li} style={style} {...attributes}>
+          {children}
+        </li>
+      );
+    case "numbered-list":
+      return (
+        <ol className={styles.ol} style={style} {...attributes}>
+          {children}
+        </ol>
+      );
+    default:
+      return (
+        <p className={styles.p} style={style} {...attributes}>
+          {children}
+        </p>
+      );
+  }
+};
+
+const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
+  if (leaf.bold) children = <strong>{children}</strong>;
+  if (leaf.italic) children = <em>{children}</em>;
+  if (leaf.underline) <u>{children}</u>;
+
+  return <span {...attributes}>{children}</span>;
+};
 
 const initial = [
   {
@@ -175,12 +232,20 @@ const RichtextEditor = ({
   placeholder,
 }: RichtextEditorProps) => {
   const [editor] = useState(() => withReact(withHistory(createEditor())));
+  const renderElement = useCallback(
+    (props: RenderElementProps) => <Element {...props} />,
+    []
+  );
+  const renderLeaf = useCallback(
+    (props: RenderLeafProps) => <Leaf {...props} />,
+    []
+  );
 
   useEffect(() => ReactEditor.focus(editor), []);
 
   const onEditorChange = debounce((values: Descendant[]) => {
     console.log("Value: ", values);
-  }, 500);
+  }, 1000);
 
   return (
     <Slate
@@ -189,7 +254,12 @@ const RichtextEditor = ({
       onChange={onEditorChange}
     >
       <RichtextToolbar />
-      <Editable className={styles.editor} placeholder={placeholder} />
+      <Editable
+        className={styles.editor}
+        placeholder={placeholder}
+        renderElement={renderElement}
+        renderLeaf={renderLeaf}
+      />
     </Slate>
   );
 };
