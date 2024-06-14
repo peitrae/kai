@@ -6,7 +6,10 @@ import styles from "./Grammar.module.sass";
 
 const Grammar = () => (
   <main className={classNames("page", styles.grammar)}>
-    <RichtextEditor placeholder="Type or paste your text here" />
+    <RichtextEditor
+      className={styles.grammarEditor}
+      placeholder="Type or paste your text here"
+    />
   </main>
 );
 

@@ -158,6 +158,7 @@ const initial = [
 const RichtextEditor = ({
   initialValue = initial,
   placeholder,
+  className,
 }: RichtextEditorProps) => {
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
@@ -174,7 +175,7 @@ const RichtextEditor = ({
   useEffect(() => ReactEditor.focus(editor), []);
 
   const onEditorChange = debounce((values: Descendant[]) => {
-    console.log("Value: ", values);
+    console.log(values);
   }, 1000);
 
   const handleHotkey = (event: KeyboardEventLike) => {
@@ -187,20 +188,22 @@ const RichtextEditor = ({
   };
 
   return (
-    <Slate
-      editor={editor}
-      initialValue={initialValue}
-      onChange={onEditorChange}
-    >
-      <RichtextToolbar />
-      <Editable
-        className={styles.editor}
-        placeholder={placeholder}
-        renderElement={renderElement}
-        renderLeaf={renderLeaf}
-        onKeyDown={handleHotkey}
-      />
-    </Slate>
+    <div className={classNames(styles.container, className)}>
+      <Slate
+        editor={editor}
+        initialValue={initialValue}
+        onChange={onEditorChange}
+      >
+        <RichtextToolbar />
+        <Editable
+          className={styles.editor}
+          placeholder={placeholder}
+          renderElement={renderElement}
+          renderLeaf={renderLeaf}
+          onKeyDown={handleHotkey}
+        />
+      </Slate>
+    </div>
   );
 };
 
