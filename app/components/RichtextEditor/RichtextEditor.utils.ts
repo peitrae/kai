@@ -10,6 +10,12 @@ import {
 import { ReactEditor } from "slate-react";
 import { jsx } from "slate-hyperscript";
 
+export const HOTKEYS = {
+  "mod+b": "bold",
+  "mod+i": "italic",
+  "mod+u": "underline",
+};
+
 export const ELEMENT_TAGS = {
   A: (el: HTMLElement) => ({ type: "link", url: el.getAttribute("href") }),
   BLOCKQUOTE: () => ({ type: "quote" }),

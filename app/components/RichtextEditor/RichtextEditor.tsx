@@ -26,6 +26,7 @@ import classNames from "classnames";
 import { withHistory } from "slate-history";
 
 import {
+  HOTKEYS,
   TEXT_ALIGN_TYPES,
   isBlockActive,
   isMarkActive,
@@ -37,6 +38,7 @@ import debounce from "~/utils/debounce";
 
 import styles from "./RichtextEditor.module.sass";
 import { RichtextButtonProps, RichtextEditorProps } from ".";
+import isHotkey, { KeyboardEventLike } from "is-hotkey";
 
 const RichtextMarkButton = ({ format, icon: Icon }: RichtextButtonProps) => {
   const editor = useSlate();
@@ -175,6 +177,15 @@ const RichtextEditor = ({
     console.log("Value: ", values);
   }, 1000);
 
+  const handleHotkey = (event: KeyboardEventLike) => {
+    for (const hotkey in HOTKEYS) {
+      if (!isHotkey(hotkey, event)) return;
+
+      const mark = HOTKEYS[hotkey as keyof typeof HOTKEYS];
+      toggleMark(editor, mark);
+    }
+  };
+
   return (
     <Slate
       editor={editor}
@@ -187,6 +198,7 @@ const RichtextEditor = ({
         placeholder={placeholder}
         renderElement={renderElement}
         renderLeaf={renderLeaf}
+        onKeyDown={handleHotkey}
       />
     </Slate>
   );
