@@ -1,10 +1,11 @@
+import { BaseRange, Descendant, NodeEntry } from "slate";
 import { IconType } from "react-icons";
-import { Descendant } from "slate";
 
 export interface RichtextEditorProps {
   initialValue?: Descendant[];
   placeholder?: string;
   className?: string;
+  decorate?: (entry: NodeEntry) => BaseRange[];
   onChange?: (value: Descendant[]) => void;
 }
 

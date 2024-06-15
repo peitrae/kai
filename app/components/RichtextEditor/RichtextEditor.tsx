@@ -144,7 +144,14 @@ const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
   if (leaf.italic) children = <em>{children}</em>;
   if (leaf.underline) <u>{children}</u>;
 
-  return <span {...attributes}>{children}</span>;
+  return (
+    <span
+      {...attributes}
+      className={classNames(leaf.highlight && styles.highlight)}
+    >
+      {children}
+    </span>
+  );
 };
 
 const initial = [
@@ -158,6 +165,7 @@ const RichtextEditor = ({
   initialValue = initial,
   placeholder,
   className,
+  decorate,
   onChange,
 }: RichtextEditorProps) => {
   const [editor] = useState(() =>
@@ -192,6 +200,7 @@ const RichtextEditor = ({
           placeholder={placeholder}
           renderElement={renderElement}
           renderLeaf={renderLeaf}
+          decorate={decorate}
           onKeyDown={handleHotkey}
         />
       </Slate>
