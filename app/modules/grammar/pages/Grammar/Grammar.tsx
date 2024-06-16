@@ -9,52 +9,64 @@ import {
 
 import styles from "./Grammar.module.sass";
 import { highlightSuggestions } from "./Grammar.utils";
-import { HighlightSuggestionsParams } from ".";
+import { SuggestionItem } from "./Grammar.types";
+import { ReactEditor } from "slate-react";
 
-export const correctValue = [
+export const correctValue: SuggestionItem[] = [
   {
-    type: "paragraph",
-    children: [{ text: "Sha dont like apples." }],
+    text: "She doesn't like apples.",
+    path: [0, 0],
   },
-  {
-    type: "paragraph",
-    children: [{ text: "The book on the table is mine" }],
-  },
-  {
-    type: "paragraph",
-    children: [{ text: "Him and store are went to the stare." }],
-  },
+  { text: "Him and me ", path: [2, 0] },
+  { text: " to the store.", path: [2, 2] },
 ];
 
 const initialValue = [
   {
     type: "paragraph",
-    children: [{ text: "She don't like apples." }],
+    children: [
+      {
+        text: "She don't like apples.",
+      },
+    ],
   },
   {
     type: "paragraph",
-    children: [{ text: "The book on the table is mine" }],
+    children: [
+      {
+        text: "The book on the table is mine",
+      },
+    ],
   },
   {
     type: "paragraph",
-    children: [{ text: "Him and me went to the store." }],
+    children: [
+      {
+        text: "Him and I ",
+        bold: true,
+      },
+      {
+        text: "went",
+        italic: true,
+      },
+      {
+        text: " to the stare.",
+      },
+    ],
   },
 ];
 
 const Grammar = () => {
-  const [suggestions] = useState(correctValue);
+  const [suggestions] = useState<SuggestionItem[]>(correctValue);
 
   const highlightSuggestionsCallback = useCallback(
-    (params: HighlightSuggestionsParams) => highlightSuggestions(params),
+    (editor: ReactEditor) => highlightSuggestions(editor, suggestions),
     [suggestions]
   );
+
   const onEditorChange = debounce(
-    ({ editor, value }: OnChangeRichtextEditorParams) => {
-      highlightSuggestionsCallback({
-        editor,
-        currentNode: value,
-        suggestionNode: suggestions,
-      });
+    ({ editor }: OnChangeRichtextEditorParams) => {
+      highlightSuggestionsCallback(editor);
     },
     500
   );

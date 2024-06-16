@@ -1,11 +1,10 @@
-import { Element, Node, Text, Transforms } from "slate";
+import { Editor, Node, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
 
-import { HighlightSuggestionsParams } from ".";
-import { HighlightTextParams } from "./Grammar.types";
+import { SuggestionItem } from "./Grammar.types";
 
 const findIndexRanges = (text: string, chars: string[]) => {
   const indexRanges: (number[] | -1)[] = [];
@@ -34,12 +33,10 @@ const getSuggestedRanges = (current: string, suggestion: string) => {
   return ranges;
 };
 
-const highlightText = ({
-  editor,
-  currentNode,
-  suggestionNode,
-}: HighlightTextParams) => {
-  const suggestionText = Node.string(suggestionNode);
+const highlightText = (editor: ReactEditor, suggestion: SuggestionItem) => {
+  const currentNode = Editor.node(editor, suggestion.path)[0];
+
+  const suggestionText = Node.string(suggestion);
   const currentText = Node.string(currentNode);
   const suggestedRanges = getSuggestedRanges(currentText, suggestionText);
 
@@ -66,39 +63,15 @@ const highlightText = ({
   });
 };
 
-export const highlightSuggestions = ({
-  editor,
-  currentNode,
-  suggestionNode,
-}: HighlightSuggestionsParams) => {
-  if (Node.isNodeList(currentNode) && Node.isNodeList(suggestionNode)) {
-    currentNode.forEach((current, idx) =>
-      highlightSuggestions({
-        editor,
-        currentNode: current,
-        suggestionNode: suggestionNode[idx],
-      })
-    );
-  } else if (
-    Element.isElement(currentNode) &&
-    Element.isElement(suggestionNode)
-  ) {
-    currentNode.children.forEach((current, idx) =>
-      highlightSuggestions({
-        editor,
-        currentNode: current,
-        suggestionNode: suggestionNode.children[idx],
-      })
-    );
-  } else if (
-    Text.isText(currentNode) &&
-    Text.isText(suggestionNode) &&
-    !Text.equals(currentNode, suggestionNode)
-  ) {
-    highlightText({
-      editor,
-      currentNode,
-      suggestionNode,
-    });
+export const highlightSuggestions = (
+  editor: ReactEditor,
+  suggestions: SuggestionItem[]
+) => {
+  for (let i = suggestions.length - 1; i >= 0; i--) {
+    const hasPath = editor.hasPath(suggestions[i].path);
+
+    if (!hasPath) return;
+
+    highlightText(editor, suggestions[i]);
   }
 };

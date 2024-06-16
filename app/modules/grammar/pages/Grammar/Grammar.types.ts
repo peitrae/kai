@@ -1,14 +1,5 @@
-import { BaseText, Descendant, Node } from "slate";
-import { ReactEditor } from "slate-react";
+import { BaseText, Path } from "slate";
 
-export interface HighlightSuggestionsParams {
-  editor: ReactEditor;
-  currentNode: Descendant[] | Descendant;
-  suggestionNode: Descendant[] | Descendant;
-}
-
-export interface HighlightTextParams {
-  editor: ReactEditor;
-  currentNode: BaseText;
-  suggestionNode: Node;
+export interface SuggestionItem extends BaseText {
+  path: Path;
 }
