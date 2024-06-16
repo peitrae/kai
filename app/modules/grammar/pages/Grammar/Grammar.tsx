@@ -12,50 +12,7 @@ import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
 import { ReactEditor } from "slate-react";
 import { SuggestionItem } from ".";
 
-export const correctValue: SuggestionItem[] = [
-  {
-    text: "She doesn't like apples.",
-    path: [0, 0],
-    id: "3",
-  },
-  { text: "Him and me ", path: [2, 0], id: "5" },
-  { text: " to the store.", path: [2, 2], id: "7" },
-];
-
-const initialValue = [
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "She don't like apples.",
-      },
-    ],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "The book on the table is mine",
-      },
-    ],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "Him and I ",
-        bold: true,
-      },
-      {
-        text: "went",
-        italic: true,
-      },
-      {
-        text: " to the stare.",
-      },
-    ],
-  },
-];
+export const correctValue: SuggestionItem[] = [];
 
 const Grammar = () => {
   const [suggestions] = useState<SuggestionItem[]>(correctValue);
@@ -79,7 +36,6 @@ const Grammar = () => {
       <RichtextEditor
         className={styles.grammarEditor}
         placeholder="Type or paste your text here"
-        initialValue={initialValue}
         onValueChange={onEditorChange}
       />
     </main>

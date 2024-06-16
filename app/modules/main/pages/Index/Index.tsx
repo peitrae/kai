@@ -20,7 +20,7 @@ export default function Index() {
       </header>
       <section className={styles.mainLinkList}>
         <MainLinkItem
-          to="/"
+          to="/grammar"
           title="Grammar"
           description="Helps you find the words you need⁠"
           icon={IoBook}
