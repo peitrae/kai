@@ -1,15 +1,15 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const debounce = (cb: (args?: any) => void, delay: number) => {
+const debounce = <T = unknown>(cb: (...args: T[]) => void, delay: number) => {
   let timeout: ReturnType<typeof setTimeout>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (args: any) => {
+  return (...args: T[]) => {
     if (timeout) {
       clearTimeout(timeout);
     }
 
     timeout = setTimeout(() => {
-      cb(args);
+      cb(...args);
     }, delay);
   };
 };
