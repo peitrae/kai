@@ -162,14 +162,17 @@ const RichtextEditor = ({
   className,
   decorate,
   onChange,
+  onValueChange,
 }: RichtextEditorProps) => {
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
   );
+
   const renderElement = useCallback(
     (props: RenderElementProps) => <Element {...props} />,
     []
   );
+
   const renderLeaf = useCallback(
     (props: RenderLeafProps) => <Leaf {...props} />,
     []
@@ -188,7 +191,16 @@ const RichtextEditor = ({
 
   return (
     <div className={classNames(styles.container, className)}>
-      <Slate editor={editor} initialValue={initialValue} onChange={onChange}>
+      <Slate
+        editor={editor}
+        initialValue={initialValue}
+        onChange={onChange ? (value) => onChange({ value, editor }) : undefined}
+        onValueChange={
+          onValueChange
+            ? (value) => onValueChange({ value, editor })
+            : undefined
+        }
+      >
         <RichtextToolbar />
         <Editable
           className={styles.editor}
