@@ -1,142 +1,104 @@
-import {
-  BaseElement,
-  BaseRange,
-  BaseText,
-  Descendant,
-  Element,
-  Node,
-  NodeEntry,
-  Path,
-  Text,
-} from "slate";
-import { IncorrectRange } from ".";
+import { Element, Node, Text, Transforms } from "slate";
+import { ReactEditor } from "slate-react";
 
-export const addTextPathProperty = (
-  nodes: Descendant[],
-  parentPath: number[] = []
-) => {
-  return nodes.map((node, index) => {
-    const currentPath = [...parentPath, index];
-    const newNode = { ...node };
+import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
+import findStringDifference from "~/utils/findStringDifference";
 
-    if (Text.isText(newNode)) {
-      newNode.path = currentPath;
+import { HighlightSuggestionsParams } from ".";
+import { HighlightTextParams } from "./Grammar.types";
+
+const findIndexRanges = (text: string, chars: string[]) => {
+  const indexRanges: (number[] | -1)[] = [];
+
+  chars.forEach((char) => {
+    const startIndex = text.indexOf(char);
+    if (startIndex !== -1) {
+      const endIndex = startIndex + char.length - 1;
+      indexRanges.push([startIndex, endIndex]);
+    } else {
+      indexRanges.push(-1);
     }
-
-    if (Element.isElement(newNode) && Element.isElement(node)) {
-      newNode.children = addTextPathProperty(node.children, currentPath);
-    }
-
-    return newNode;
-  });
-};
-
-const combineIncorrectRanges = (ranges: IncorrectRange[]) => {
-  if (ranges.length === 1) return ranges;
-
-  const combinedRanges: IncorrectRange[] = [];
-
-  for (let i = 0; i < ranges.length; i++) {
-    const currentRange = ranges[i];
-    const nextRange = ranges[i + 1];
-
-    if (!nextRange) {
-      combinedRanges.push(ranges[i]);
-      continue;
-    }
-
-    const isCombined = nextRange.start - currentRange.end === 2;
-
-    if (!isCombined) {
-      combinedRanges.push(ranges[i]);
-      continue;
-    }
-
-    combinedRanges.push({
-      start: currentRange.start,
-      end: nextRange.end,
-      path: currentRange.path,
-    });
-
-    i++;
-  }
-
-  return combinedRanges;
-};
-
-const getIncorrectRanges = (
-  contentTexts: string[],
-  incorrectTexts: string[],
-  path: Path
-) => {
-  const ranges: IncorrectRange[] = [];
-  let incorrectPath = path;
-
-  incorrectTexts.forEach((incorrect) => {
-    contentTexts.forEach((text, idx) => {
-      if (contentTexts.length !== 1) incorrectPath = [...path, idx];
-      let startIndex = 0;
-
-      while ((startIndex = text.indexOf(incorrect, startIndex)) !== -1) {
-        const endIndex = startIndex + incorrect.length - 1;
-        ranges.push({ start: startIndex, end: endIndex, path: incorrectPath });
-        startIndex += incorrect.length;
-      }
-    });
   });
 
-  return combineIncorrectRanges(ranges);
+  return indexRanges;
 };
 
-const getSuggestionNode = (
-  suggestions: Descendant[],
-  path: Path
-): Descendant | undefined => {
-  const [parentIndex, childIndex] = path;
+const getSuggestedRanges = (current: string, suggestion: string) => {
+  const currentPart = current.split(" ");
+  const suggestionPart = suggestion.split(" ");
 
-  if (childIndex !== undefined) {
-    const parentNode = suggestions[parentIndex] as BaseElement;
-    return parentNode.children[childIndex];
-  } else {
-    return suggestions[parentIndex];
-  }
-};
+  const currentIncorrects = findStringDifference(suggestionPart, currentPart);
 
-export const highlightSuggestedWords = (
-  [node, path]: NodeEntry,
-  suggestions: Descendant[]
-) => {
-  const ranges: BaseRange[] = [];
-
-  if (suggestions.length && Element.isElement(node)) {
-    const suggestionNode = getSuggestionNode(suggestions, path);
-
-    if (!suggestionNode || !Node.matches(node, suggestionNode)) return [];
-
-    const suggestionText = Node.string(suggestionNode);
-    const suggestionTextParts = new Set(suggestionText.split(" "));
-
-    const contentTexts = node.children.map((item) => (item as BaseText).text);
-    const contentTextParts = Node.string(node).split(" ");
-
-    const incorrectParts = contentTextParts.filter(
-      (part) => !suggestionTextParts.has(part)
-    );
-
-    const incorrectRanges = getIncorrectRanges(
-      contentTexts,
-      incorrectParts,
-      path
-    );
-
-    incorrectRanges.forEach((range) => {
-      ranges.push({
-        anchor: { path: range.path, offset: range.start },
-        focus: { path: range.path, offset: range.end + 1 },
-        highlight: true,
-      });
-    });
-  }
+  const ranges = findIndexRanges(current, currentIncorrects);
 
   return ranges;
+};
+
+const highlightText = ({
+  editor,
+  currentNode,
+  suggestionNode,
+}: HighlightTextParams) => {
+  const suggestionText = Node.string(suggestionNode);
+  const currentText = Node.string(currentNode);
+  const suggestedRanges = getSuggestedRanges(currentText, suggestionText);
+
+  suggestedRanges.reverse().forEach((ranges) => {
+    if (ranges === -1) return;
+
+    const [anchorOffset, focusOffset] = ranges;
+
+    try {
+      const currentPath = ReactEditor.findPath(editor, currentNode);
+
+      Transforms.select(editor, {
+        anchor: { path: currentPath, offset: anchorOffset },
+        focus: { path: currentPath, offset: focusOffset + 1 },
+      });
+
+      toggleMark(editor, "highlight");
+
+      Transforms.deselect(editor);
+    } catch (e) {
+      console.error(`Unable to highlight: "${currentText}"`);
+      return;
+    }
+  });
+};
+
+export const highlightSuggestions = ({
+  editor,
+  currentNode,
+  suggestionNode,
+}: HighlightSuggestionsParams) => {
+  if (Node.isNodeList(currentNode) && Node.isNodeList(suggestionNode)) {
+    currentNode.forEach((current, idx) =>
+      highlightSuggestions({
+        editor,
+        currentNode: current,
+        suggestionNode: suggestionNode[idx],
+      })
+    );
+  } else if (
+    Element.isElement(currentNode) &&
+    Element.isElement(suggestionNode)
+  ) {
+    currentNode.children.forEach((current, idx) =>
+      highlightSuggestions({
+        editor,
+        currentNode: current,
+        suggestionNode: suggestionNode.children[idx],
+      })
+    );
+  } else if (
+    Text.isText(currentNode) &&
+    Text.isText(suggestionNode) &&
+    !Text.equals(currentNode, suggestionNode)
+  ) {
+    highlightText({
+      editor,
+      currentNode,
+      suggestionNode,
+    });
+  }
 };

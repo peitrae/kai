@@ -1,17 +1,28 @@
 import { useCallback, useState } from "react";
 import classNames from "classnames";
-import { Descendant, NodeEntry } from "slate";
 
 import debounce from "~/utils/debounce";
-import { RichtextEditor } from "~/components/RichtextEditor";
-import { highlightSuggestedWords } from "./Grammar.utils";
+import {
+  RichtextEditor,
+  OnChangeRichtextEditorParams,
+} from "~/components/RichtextEditor";
 
 import styles from "./Grammar.module.sass";
+import { highlightSuggestions } from "./Grammar.utils";
+import { HighlightSuggestionsParams } from ".";
 
-const correctValue = [
+export const correctValue = [
   {
     type: "paragraph",
-    children: [{ text: "Sha doesn't like apples." }],
+    children: [{ text: "Sha dont like apples." }],
+  },
+  {
+    type: "paragraph",
+    children: [{ text: "The book on the table is mine" }],
+  },
+  {
+    type: "paragraph",
+    children: [{ text: "Him and store are went to the stare." }],
   },
 ];
 
@@ -33,20 +44,19 @@ const initialValue = [
 const Grammar = () => {
   const [suggestions] = useState(correctValue);
 
-  const onEditorChange = debounce((values: Descendant[]) => {
-    console.log("values: ", values);
-  }, 1000);
-
-  const decorate = useCallback(
-    ([node, path]: NodeEntry) => {
-      const highligtedRanges = highlightSuggestedWords(
-        [node, path],
-        suggestions
-      );
-
-      return highligtedRanges;
-    },
+  const highlightSuggestionsCallback = useCallback(
+    (params: HighlightSuggestionsParams) => highlightSuggestions(params),
     [suggestions]
+  );
+  const onEditorChange = debounce(
+    ({ editor, value }: OnChangeRichtextEditorParams) => {
+      highlightSuggestionsCallback({
+        editor,
+        currentNode: value,
+        suggestionNode: suggestions,
+      });
+    },
+    500
   );
 
   return (
@@ -55,8 +65,7 @@ const Grammar = () => {
         className={styles.grammarEditor}
         placeholder="Type or paste your text here"
         initialValue={initialValue}
-        decorate={decorate}
-        onChange={onEditorChange}
+        onValueChange={onEditorChange}
       />
     </main>
   );
