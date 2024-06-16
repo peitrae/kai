@@ -62,8 +62,9 @@ const getSuggestedRanges = (current: string, suggestion: string) => {
 const highlightText = (editor: ReactEditor, suggestion: SuggestionItem) => {
   const currentNode = Editor.node(editor, suggestion.path)[0];
 
-  const suggestionText = Node.string(suggestion);
+  const currentSelection = editor.selection ? { ...editor.selection } : null;
   const currentText = Node.string(currentNode);
+  const suggestionText = Node.string(suggestion);
   const suggestedRanges = getSuggestedRanges(currentText, suggestionText);
 
   suggestedRanges.reverse().forEach((ranges) => {
@@ -87,6 +88,8 @@ const highlightText = (editor: ReactEditor, suggestion: SuggestionItem) => {
       return;
     }
   });
+
+  if (currentSelection) Transforms.select(editor, currentSelection);
 };
 
 export const highlightSuggestions = (
