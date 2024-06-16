@@ -1,6 +1,15 @@
-import { BaseRange, Descendant, Element, NodeEntry, Text } from "slate";
+import {
+  BaseElement,
+  BaseRange,
+  BaseText,
+  Descendant,
+  Element,
+  Node,
+  NodeEntry,
+  Path,
+  Text,
+} from "slate";
 import { IncorrectRange } from ".";
-import { Suggestion } from "./Grammar.types";
 
 export const addTextPathProperty = (
   nodes: Descendant[],
@@ -46,6 +55,7 @@ const combineIncorrectRanges = (ranges: IncorrectRange[]) => {
     combinedRanges.push({
       start: currentRange.start,
       end: nextRange.end,
+      path: currentRange.path,
     });
 
     i++;
@@ -54,52 +64,76 @@ const combineIncorrectRanges = (ranges: IncorrectRange[]) => {
   return combinedRanges;
 };
 
-const getIncorrectRanges = (main: string, incorrects: string[]) => {
+const getIncorrectRanges = (
+  contentTexts: string[],
+  incorrectTexts: string[],
+  path: Path
+) => {
   const ranges: IncorrectRange[] = [];
+  let incorrectPath = path;
 
-  incorrects.forEach((incorrect) => {
-    let startIndex = 0;
+  incorrectTexts.forEach((incorrect) => {
+    contentTexts.forEach((text, idx) => {
+      if (contentTexts.length !== 1) incorrectPath = [...path, idx];
+      let startIndex = 0;
 
-    while ((startIndex = main.indexOf(incorrect, startIndex)) !== -1) {
-      const endIndex = startIndex + incorrect.length - 1;
-      ranges.push({ start: startIndex, end: endIndex });
-      startIndex += incorrect.length;
-    }
+      while ((startIndex = text.indexOf(incorrect, startIndex)) !== -1) {
+        const endIndex = startIndex + incorrect.length - 1;
+        ranges.push({ start: startIndex, end: endIndex, path: incorrectPath });
+        startIndex += incorrect.length;
+      }
+    });
   });
 
   return combineIncorrectRanges(ranges);
 };
 
+const getSuggestionNode = (
+  suggestions: Descendant[],
+  path: Path
+): Descendant | undefined => {
+  const [parentIndex, childIndex] = path;
+
+  if (childIndex !== undefined) {
+    const parentNode = suggestions[parentIndex] as BaseElement;
+    return parentNode.children[childIndex];
+  } else {
+    return suggestions[parentIndex];
+  }
+};
+
 export const highlightSuggestedWords = (
   [node, path]: NodeEntry,
-  suggestions: Suggestion[]
+  suggestions: Descendant[]
 ) => {
   const ranges: BaseRange[] = [];
 
-  if (suggestions.length && Text.isText(node)) {
-    const { text } = node;
+  if (suggestions.length && Element.isElement(node)) {
+    const suggestionNode = getSuggestionNode(suggestions, path);
 
-    suggestions.forEach(({ text: suggestionText, path: suggestionPath }) => {
-      const isSamePath =
-        JSON.stringify(path) === JSON.stringify(suggestionPath);
+    if (!suggestionNode || !Node.matches(node, suggestionNode)) return [];
 
-      if (!isSamePath) return;
+    const suggestionText = Node.string(suggestionNode);
+    const suggestionTextParts = new Set(suggestionText.split(" "));
 
-      const textParts = text.split(" ");
-      const suggestionTextParts = new Set(suggestionText.split(" "));
+    const contentTexts = node.children.map((item) => (item as BaseText).text);
+    const contentTextParts = Node.string(node).split(" ");
 
-      const incorrectParts = textParts.filter(
-        (part) => !suggestionTextParts.has(part)
-      );
+    const incorrectParts = contentTextParts.filter(
+      (part) => !suggestionTextParts.has(part)
+    );
 
-      const incorrectRanges = getIncorrectRanges(text, incorrectParts);
+    const incorrectRanges = getIncorrectRanges(
+      contentTexts,
+      incorrectParts,
+      path
+    );
 
-      incorrectRanges.forEach((range) => {
-        ranges.push({
-          anchor: { path, offset: range.start },
-          focus: { path, offset: range.end + 1 },
-          highlight: true,
-        });
+    incorrectRanges.forEach((range) => {
+      ranges.push({
+        anchor: { path: range.path, offset: range.start },
+        focus: { path: range.path, offset: range.end + 1 },
+        highlight: true,
       });
     });
   }

@@ -9,14 +9,16 @@ import { highlightSuggestedWords } from "./Grammar.utils";
 import styles from "./Grammar.module.sass";
 
 const correctValue = [
-  { text: "She doesn't like apples.", path: [0, 0] },
-  { text: "Him or I went to the store.", path: [2, 0] },
+  {
+    type: "paragraph",
+    children: [{ text: "Sha doesn't like apples." }],
+  },
 ];
 
 const initialValue = [
   {
     type: "paragraph",
-    children: [{ text: "She don't like apples" }],
+    children: [{ text: "She don't like apples." }],
   },
   {
     type: "paragraph",
@@ -35,11 +37,17 @@ const Grammar = () => {
     console.log("values: ", values);
   }, 1000);
 
-  const decorate = useCallback(([node, path]: NodeEntry) => {
-    const highligtedRanges = highlightSuggestedWords([node, path], suggestions);
+  const decorate = useCallback(
+    ([node, path]: NodeEntry) => {
+      const highligtedRanges = highlightSuggestedWords(
+        [node, path],
+        suggestions
+      );
 
-    return highligtedRanges;
-  }, []);
+      return highligtedRanges;
+    },
+    [suggestions]
+  );
 
   return (
     <main className={classNames("page", styles.grammar)}>
