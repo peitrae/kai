@@ -1,10 +1,36 @@
-import { Editor, Node, Transforms } from "slate";
+import { Editor, Element, Node, Text, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
+import { AddTextIdentifierParams, SuggestionItem } from ".";
 
-import { SuggestionItem } from "./Grammar.types";
+export const addTextIdentifier = ({
+  editor,
+  nodes,
+  parentPath = [],
+}: AddTextIdentifierParams) => {
+  return nodes.map((node, index) => {
+    const newNode = { ...node };
+    const currentPath = [...parentPath, index];
+
+    if (Text.isText(newNode)) {
+      const key = ReactEditor.findKey(editor, node);
+      newNode.path = currentPath;
+      newNode.id = key.id;
+    }
+
+    if (Element.isElement(newNode) && Element.isElement(node)) {
+      newNode.children = addTextIdentifier({
+        editor,
+        nodes: node.children,
+        parentPath: currentPath,
+      });
+    }
+
+    return newNode;
+  });
+};
 
 const findIndexRanges = (text: string, chars: string[]) => {
   const indexRanges: (number[] | -1)[] = [];

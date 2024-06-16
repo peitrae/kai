@@ -2,6 +2,7 @@ import {
   BaseElement as Element,
   BaseText as Text,
   BaseRange as Range,
+  Path,
 } from "slate";
 
 declare module "slate" {
@@ -15,6 +16,8 @@ declare module "slate" {
     italic?: boolean;
     underline?: boolean;
     highlight?: boolean;
+    path?: Path;
+    id?: string;
   }
 
   export interface BaseRange extends Range {

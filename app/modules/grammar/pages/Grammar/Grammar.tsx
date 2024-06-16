@@ -8,17 +8,18 @@ import {
 } from "~/components/RichtextEditor";
 
 import styles from "./Grammar.module.sass";
-import { highlightSuggestions } from "./Grammar.utils";
-import { SuggestionItem } from "./Grammar.types";
+import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
 import { ReactEditor } from "slate-react";
+import { SuggestionItem } from ".";
 
 export const correctValue: SuggestionItem[] = [
   {
     text: "She doesn't like apples.",
     path: [0, 0],
+    id: "3",
   },
-  { text: "Him and me ", path: [2, 0] },
-  { text: " to the store.", path: [2, 2] },
+  { text: "Him and me ", path: [2, 0], id: "5" },
+  { text: " to the store.", path: [2, 2], id: "7" },
 ];
 
 const initialValue = [
@@ -65,7 +66,9 @@ const Grammar = () => {
   );
 
   const onEditorChange = debounce(
-    ({ editor }: OnChangeRichtextEditorParams) => {
+    ({ editor, value }: OnChangeRichtextEditorParams) => {
+      console.log(addTextIdentifier({ editor, nodes: value }));
+
       highlightSuggestionsCallback(editor);
     },
     500
