@@ -81,6 +81,7 @@ const highlightText = (editor: ReactEditor, suggestion: SuggestionItem) => {
       });
 
       toggleMark(editor, "highlight");
+      toggleMark(editor, "id", suggestion.id);
 
       Transforms.deselect(editor);
     } catch (e) {

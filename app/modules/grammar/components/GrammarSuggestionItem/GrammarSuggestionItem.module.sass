@@ -1,0 +1,48 @@
+.container
+  padding: 0.75rem 0.25rem 0.75rem 1.5rem
+  display: flex
+  flex-direction: column
+  gap: 0.25rem
+  font-weight: 400
+  cursor: pointer
+
+.container:hover
+  @apply tw-bg-slate-700
+
+.container:hover .summary .actions
+  display: flex
+
+.summary
+  display: flex
+  justify-content: space-between
+  align-items: center
+  height: 100%
+
+.summary span
+  display: flex
+  align-items: center
+  min-height: 2rem
+
+.summary .actions
+  display: none
+
+.actions
+  display: flex
+  gap: 0.25rem
+
+.btnIgnore
+  @apply tw-text-slate-300
+
+.full
+  display: flex
+  flex-direction: column
+  gap: 0.75rem
+  padding-bottom: 0.5rem
+
+.incorrectMark,
+.suggestedMark
+  font-weight: 600
+
+.incorrectMark
+  text-decoration: line-through
+  @apply tw-text-slate-500

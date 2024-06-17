@@ -74,13 +74,17 @@ export const isBlockActive = (
   return !!match;
 };
 
-export const toggleMark = (editor: BaseEditor, format: string) => {
+export const toggleMark = (
+  editor: BaseEditor,
+  format: string,
+  value: unknown = true
+) => {
   const isActive = isMarkActive(editor, format);
 
   if (isActive) {
     Editor.removeMark(editor, format);
   } else {
-    Editor.addMark(editor, format, true);
+    Editor.addMark(editor, format, value);
   }
 };
 
