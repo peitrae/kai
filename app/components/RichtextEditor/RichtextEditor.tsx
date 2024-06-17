@@ -1,5 +1,4 @@
-import { CSSProperties, useCallback, useEffect, useState } from "react";
-import { createEditor } from "slate";
+import { CSSProperties, useCallback, useEffect } from "react";
 import {
   Editable,
   ReactEditor,
@@ -7,7 +6,6 @@ import {
   RenderLeafProps,
   Slate,
   useSlate,
-  withReact,
 } from "slate-react";
 import {
   BsJustify,
@@ -23,7 +21,6 @@ import {
   BsTypeUnderline,
 } from "react-icons/bs";
 import classNames from "classnames";
-import { withHistory } from "slate-history";
 
 import {
   HOTKEYS,
@@ -32,7 +29,6 @@ import {
   isMarkActive,
   toggleBlock,
   toggleMark,
-  withHtml,
 } from "./RichtextEditor.utils";
 
 import styles from "./RichtextEditor.module.sass";
@@ -157,6 +153,7 @@ const initial = [
 ];
 
 const RichtextEditor = ({
+  editor,
   initialValue = initial,
   placeholder,
   className,
@@ -164,10 +161,6 @@ const RichtextEditor = ({
   onChange,
   onValueChange,
 }: RichtextEditorProps) => {
-  const [editor] = useState(() =>
-    withHtml(withReact(withHistory(createEditor())))
-  );
-
   const renderElement = useCallback(
     (props: RenderElementProps) => <Element {...props} />,
     []
@@ -194,12 +187,8 @@ const RichtextEditor = ({
       <Slate
         editor={editor}
         initialValue={initialValue}
-        onChange={onChange ? (value) => onChange({ value, editor }) : undefined}
-        onValueChange={
-          onValueChange
-            ? (value) => onValueChange({ value, editor })
-            : undefined
-        }
+        onChange={onChange}
+        onValueChange={onValueChange}
       >
         <RichtextToolbar />
         <Editable

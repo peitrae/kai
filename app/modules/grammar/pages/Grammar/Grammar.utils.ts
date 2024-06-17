@@ -1,4 +1,12 @@
-import { BaseText, Editor, Element, Node, Text, Transforms } from "slate";
+import {
+  BaseText,
+  Descendant,
+  Editor,
+  Element,
+  Node,
+  Text,
+  Transforms,
+} from "slate";
 import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
@@ -13,7 +21,7 @@ export const addTextIdentifier = ({
   editor,
   nodes,
   parentPath = [],
-}: AddTextIdentifierParams) => {
+}: AddTextIdentifierParams): Descendant[] => {
   return nodes.map((node, index) => {
     const newNode = { ...node };
     const currentPath = [...parentPath, index];

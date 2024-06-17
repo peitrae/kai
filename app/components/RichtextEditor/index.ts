@@ -1,6 +1,6 @@
 export { default as RichtextEditor } from "./RichtextEditor";
+export { withHtml } from "./RichtextEditor.utils";
 export type {
-  OnChangeRichtextEditorParams,
   RichtextEditorProps,
   RichtextButtonProps,
 } from "./RichtextEditor.types";

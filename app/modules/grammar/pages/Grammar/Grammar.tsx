@@ -1,27 +1,23 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
+import { Descendant, createEditor } from "slate";
+import { useFetcher } from "@remix-run/react";
+import { withReact } from "slate-react";
+import { withHistory } from "slate-history";
 import classNames from "classnames";
 
 import debounce from "~/utils/debounce";
-import {
-  RichtextEditor,
-  OnChangeRichtextEditorParams,
-} from "~/components/RichtextEditor";
+import { RichtextEditor, withHtml } from "~/components/RichtextEditor";
+import { GrammarSuggestionList } from "../../components/GrammarSuggestionList";
+import { GrammarController } from "../../controller";
 
 import styles from "./Grammar.module.sass";
 import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
-import { ReactEditor } from "slate-react";
 import { SuggestionItem } from ".";
-import { GrammarSuggestionList } from "../../components/GrammarSuggestionList";
 
-export const correctValue: SuggestionItem[] = [
-  {
-    text: "She doesn't like apples.",
-    path: [0, 0],
-    id: "3",
-  },
-  { text: "Him and me ", path: [2, 0], id: "5" },
-  { text: " to the store.", path: [2, 2], id: "7" },
-];
+export async function action() {
+  const grammar = new GrammarController();
+  return grammar.getSuggestions();
+}
 
 const initialValue = [
   {
@@ -59,26 +55,30 @@ const initialValue = [
 ];
 
 const Grammar = () => {
-  const [suggestions] = useState<SuggestionItem[]>(correctValue);
-
-  const highlightSuggestionsCallback = useCallback(
-    (editor: ReactEditor, suggestions: SuggestionItem[]) =>
-      highlightSuggestions(editor, suggestions),
-    [suggestions]
+  const fetcher = useFetcher<SuggestionItem[]>();
+  const [editor] = useState(() =>
+    withHtml(withReact(withHistory(createEditor())))
   );
 
-  const onEditorChange = debounce(
-    ({ editor, value }: OnChangeRichtextEditorParams) => {
-      console.log(addTextIdentifier({ editor, nodes: value }));
+  useEffect(() => {
+    if (!fetcher.data) return;
 
-      highlightSuggestionsCallback(editor, suggestions);
-    },
-    500
-  );
+    highlightSuggestions(editor, fetcher.data);
+  }, [fetcher.data]);
+
+  const onEditorChange = debounce((value: Descendant[]) => {
+    const body = addTextIdentifier({ editor, nodes: value });
+
+    fetcher.submit(JSON.stringify(body), {
+      method: "post",
+      encType: "application/json",
+    });
+  }, 500);
 
   return (
     <main className={classNames("page", styles.grammar)}>
       <RichtextEditor
+        editor={editor}
         initialValue={initialValue}
         className={styles.grammarEditor}
         placeholder="Type or paste your text here"
