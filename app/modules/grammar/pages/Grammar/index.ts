@@ -1,2 +1,6 @@
 export { default } from "./Grammar";
-export type { AddTextIdentifierParams, SuggestionItem } from "./Grammar.types";
+export type {
+  AddTextIdentifierParams,
+  SuggestionItem,
+  ToggleMarkHighlightParams,
+} from "./Grammar.types";

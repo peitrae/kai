@@ -10,3 +10,10 @@ export interface AddTextIdentifierParams {
 export interface SuggestionItem extends BaseText {
   path: Path;
 }
+
+export interface ToggleMarkHighlightParams {
+  editor: ReactEditor;
+  currentTextNode: BaseText;
+  suggestion: SuggestionItem;
+  suggestionRange: number[];
+}

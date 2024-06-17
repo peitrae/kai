@@ -62,7 +62,8 @@ const Grammar = () => {
   const [suggestions] = useState<SuggestionItem[]>(correctValue);
 
   const highlightSuggestionsCallback = useCallback(
-    (editor: ReactEditor) => highlightSuggestions(editor, suggestions),
+    (editor: ReactEditor, suggestions: SuggestionItem[]) =>
+      highlightSuggestions(editor, suggestions),
     [suggestions]
   );
 
@@ -70,7 +71,7 @@ const Grammar = () => {
     ({ editor, value }: OnChangeRichtextEditorParams) => {
       console.log(addTextIdentifier({ editor, nodes: value }));
 
-      highlightSuggestionsCallback(editor);
+      highlightSuggestionsCallback(editor, suggestions);
     },
     500
   );

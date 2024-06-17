@@ -1,9 +1,13 @@
-import { Editor, Element, Node, Text, Transforms } from "slate";
+import { BaseText, Editor, Element, Node, Text, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
-import { AddTextIdentifierParams, SuggestionItem } from ".";
+import {
+  AddTextIdentifierParams,
+  SuggestionItem,
+  ToggleMarkHighlightParams,
+} from ".";
 
 export const addTextIdentifier = ({
   editor,
@@ -48,49 +52,46 @@ const findIndexRanges = (text: string, chars: string[]) => {
   return indexRanges;
 };
 
-const getSuggestedRanges = (current: string, suggestion: string) => {
-  const currentPart = current.split(" ");
-  const suggestionPart = suggestion.split(" ");
+const toggleMarkHighlight = ({
+  editor,
+  currentTextNode,
+  suggestion,
+  suggestionRange,
+}: ToggleMarkHighlightParams) => {
+  const [anchorOffset, focusOffset] = suggestionRange;
 
-  const currentIncorrects = findStringDifference(suggestionPart, currentPart);
+  try {
+    const currentPath = ReactEditor.findPath(editor, currentTextNode);
 
-  const ranges = findIndexRanges(current, currentIncorrects);
+    Transforms.select(editor, {
+      anchor: { path: currentPath, offset: anchorOffset },
+      focus: { path: currentPath, offset: focusOffset + 1 },
+    });
 
-  return ranges;
+    toggleMark(editor, "highlight");
+    toggleMark(editor, "id", suggestion.id);
+
+    Transforms.deselect(editor);
+  } catch (e) {
+    const currentText = Node.string(currentTextNode);
+    console.error(`Unable to highlight: "${currentText}"`);
+  }
 };
 
-const highlightText = (editor: ReactEditor, suggestion: SuggestionItem) => {
-  const currentNode = Editor.node(editor, suggestion.path)[0];
+const getSuggestionRanges = (
+  currentTextNode: BaseText,
+  suggestionTextNode: BaseText
+) => {
+  const currentText = Node.string(currentTextNode);
+  const currentParts = currentText.split(" ");
 
-  const currentSelection = editor.selection ? { ...editor.selection } : null;
-  const currentText = Node.string(currentNode);
-  const suggestionText = Node.string(suggestion);
-  const suggestedRanges = getSuggestedRanges(currentText, suggestionText);
+  const suggestionText = Node.string(suggestionTextNode);
+  const suggestionParts = suggestionText.split(" ");
 
-  suggestedRanges.reverse().forEach((ranges) => {
-    if (ranges === -1) return;
+  const currentIncorrects = findStringDifference(suggestionParts, currentParts);
+  const suggestedRanges = findIndexRanges(currentText, currentIncorrects);
 
-    const [anchorOffset, focusOffset] = ranges;
-
-    try {
-      const currentPath = ReactEditor.findPath(editor, currentNode);
-
-      Transforms.select(editor, {
-        anchor: { path: currentPath, offset: anchorOffset },
-        focus: { path: currentPath, offset: focusOffset + 1 },
-      });
-
-      toggleMark(editor, "highlight");
-      toggleMark(editor, "id", suggestion.id);
-
-      Transforms.deselect(editor);
-    } catch (e) {
-      console.error(`Unable to highlight: "${currentText}"`);
-      return;
-    }
-  });
-
-  if (currentSelection) Transforms.select(editor, currentSelection);
+  return suggestedRanges;
 };
 
 export const highlightSuggestions = (
@@ -102,6 +103,29 @@ export const highlightSuggestions = (
 
     if (!hasPath) return;
 
-    highlightText(editor, suggestions[i]);
+    const currentSelection = editor.selection ? { ...editor.selection } : null;
+
+    const currentTextNode = Editor.node(
+      editor,
+      suggestions[i].path
+    )[0] as BaseText;
+
+    const suggestionRanges = getSuggestionRanges(
+      currentTextNode,
+      suggestions[i]
+    );
+
+    suggestionRanges.reverse().forEach((range) => {
+      if (range === -1) return;
+
+      toggleMarkHighlight({
+        editor,
+        currentTextNode,
+        suggestion: suggestions[i],
+        suggestionRange: range,
+      });
+    });
+
+    if (currentSelection) Transforms.select(editor, currentSelection);
   }
 };
