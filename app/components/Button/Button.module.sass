@@ -1,0 +1,50 @@
+.btn
+  border-radius: 0.5rem
+  display: flex
+  align-items: center
+  gap: 0.25rem
+  justify-content: center
+
+.btn:disabled
+  @apply tw-text-gray-500 tw-bg-gray-700 #{!important}
+
+.solid.primary
+  @apply tw-bg-indigo-700
+
+.solid.primary:hover
+  @apply tw-bg-indigo-800
+
+.solid.neutral
+  @apply tw-bg-slate-400 tw-text-slate-800
+
+.solid.neutral:hover
+  @apply tw-bg-slate-500
+
+.outline.primary
+  border: 2px solid
+  @apply tw-border-indigo-500 tw-text-indigo-500
+
+.outline.primary:hover
+  @apply tw-border-indigo-400 tw-text-indigo-400 tw-bg-indigo-950
+
+.outline.neutral
+  border: 2px solid
+  @apply tw-border-slate-300 tw-text-slate-300
+
+.outline.neutral:hover
+  @apply tw-border-slate-200 tw-text-slate-200 tw-bg-slate-700
+
+.sm
+  height: 2rem
+  padding: 0 0.625rem
+  font-size: 0.875rem
+
+.md
+  height: 2.5rem
+  padding: 0 1rem
+  font-size: 1rem
+
+.lg
+  height: 3rem
+  padding: 0 1.25rem
+  font-size: 1.125rem
