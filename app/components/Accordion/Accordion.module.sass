@@ -1,0 +1,27 @@
+.accordion,
+.accordionItem
+  display: flex
+  flex-direction: column
+
+.accordionItem
+  border-top: 1px solid
+
+  @apply tw-border-slate-700
+
+.accordionItem:last-child
+  border-bottom: 1px solid
+
+  @apply tw-border-slate-700
+
+.accordionButton
+  cursor: pointer
+  padding: 1rem
+
+.accordionButton.isOpen
+  padding: 1rem 1rem 0.5rem 1rem
+
+.accordionPanel
+  padding: 0.5rem 1rem 1rem 1rem
+
+.accordionButton
+  text-align: left

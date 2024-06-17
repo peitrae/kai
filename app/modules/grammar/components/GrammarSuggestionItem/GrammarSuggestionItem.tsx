@@ -1,13 +1,12 @@
-import {
-  ForwardedRef,
-  MouseEventHandler,
-  forwardRef,
-  useRef,
-  useState,
-} from "react";
-import classNames from "classnames";
+import { ForwardedRef, forwardRef } from "react";
 
 import { Button } from "~/components/Button";
+import {
+  AccordionButton,
+  AccordionItem,
+  AccordionPanel,
+  useAccordion,
+} from "~/components/Accordion";
 import { GrammarSuggestionItemDesc } from "../GrammarSuggestionItemDesc";
 
 import styles from "./GrammarSuggestionItem.module.sass";
@@ -38,54 +37,29 @@ const GrammarSuggestionItemActions = forwardRef(
   )
 );
 
-const GrammarSuggestionItem = ({
-  data,
-  className,
-}: GrammarSuggestionItemProps) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const actionRef = useRef(null);
-
-  const toggleExpand: MouseEventHandler<HTMLLIElement> = (event) => {
-    const element = event.target as HTMLLIElement;
-
-    if (element.tagName === "BUTTON") return;
-
-    setIsExpanded(!isExpanded);
-  };
+const GrammarSuggestionItem = ({ data }: GrammarSuggestionItemProps) => {
+  const { activeId } = useAccordion();
 
   const apply = () => console.log("Apply!");
 
   const ignore = () => console.log("Ignore!");
 
   return (
-    <li
-      role="presentation"
-      className={classNames(styles.container, className)}
-      onClick={toggleExpand}
-    >
-      <div className={styles.summary}>
-        <span>{data.incorrectText}</span>
-        {!isExpanded && (
-          <GrammarSuggestionItemActions
-            ref={actionRef}
-            onApply={apply}
-            onIgnore={ignore}
-          />
+    <AccordionItem id={data.id} className={styles.container}>
+      <AccordionButton className={styles.summary}>
+        {activeId === data.id ? (
+          <GrammarSuggestionItemDesc content={data.suggestionContent} />
+        ) : (
+          <>
+            <span className={styles.title}>{data.incorrectText}</span>
+            <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
+          </>
         )}
-      </div>
-      {isExpanded && (
-        <div className={styles.full}>
-          <span className={styles.fullText}>
-            <GrammarSuggestionItemDesc content={data.suggestionContent} />
-          </span>
-          <GrammarSuggestionItemActions
-            ref={actionRef}
-            onApply={apply}
-            onIgnore={ignore}
-          />
-        </div>
-      )}
-    </li>
+      </AccordionButton>
+      <AccordionPanel>
+        <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
+      </AccordionPanel>
+    </AccordionItem>
   );
 };
 
