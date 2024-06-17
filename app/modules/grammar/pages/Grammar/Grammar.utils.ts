@@ -1,18 +1,11 @@
-import {
-  BaseText,
-  Descendant,
-  Editor,
-  Element,
-  Node,
-  Text,
-  Transforms,
-} from "slate";
+import { Descendant, Editor, Element, Node, Text, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
 import {
   AddTextIdentifierParams,
+  HighlighTextParams,
   SuggestionItem,
   ToggleMarkHighlightParams,
 } from ".";
@@ -44,36 +37,31 @@ export const addTextIdentifier = ({
   });
 };
 
-const findIndexRanges = (text: string, chars: string[]) => {
+const findIndexRanges = (text: string, char: string) => {
   const indexRanges: (number[] | -1)[] = [];
 
-  chars.forEach((char) => {
-    const startIndex = text.indexOf(char);
-    if (startIndex !== -1) {
-      const endIndex = startIndex + char.length - 1;
-      indexRanges.push([startIndex, endIndex]);
-    } else {
-      indexRanges.push(-1);
-    }
-  });
+  const startIndex = text.indexOf(char);
+  if (startIndex !== -1) {
+    const endIndex = startIndex + char.length - 1;
+    indexRanges.push([startIndex, endIndex]);
+  } else {
+    indexRanges.push(-1);
+  }
 
   return indexRanges;
 };
 
 const toggleMarkHighlight = ({
   editor,
-  currentTextNode,
   suggestion,
   suggestionRange,
 }: ToggleMarkHighlightParams) => {
   const [anchorOffset, focusOffset] = suggestionRange;
 
   try {
-    const currentPath = ReactEditor.findPath(editor, currentTextNode);
-
     Transforms.select(editor, {
-      anchor: { path: currentPath, offset: anchorOffset },
-      focus: { path: currentPath, offset: focusOffset + 1 },
+      anchor: { path: suggestion.path, offset: anchorOffset },
+      focus: { path: suggestion.path, offset: focusOffset + 1 },
     });
 
     toggleMark(editor, "highlight");
@@ -81,25 +69,24 @@ const toggleMarkHighlight = ({
 
     Transforms.deselect(editor);
   } catch (e) {
-    const currentText = Node.string(currentTextNode);
-    console.error(`Unable to highlight: "${currentText}"`);
+    console.error(`Unable to highlight: "${suggestion.text}"`);
   }
 };
 
-const getSuggestionRanges = (
-  currentTextNode: BaseText,
-  suggestionTextNode: BaseText
-) => {
-  const currentText = Node.string(currentTextNode);
-  const currentParts = currentText.split(" ");
+const highlightText = ({ editor, suggestion, ranges }: HighlighTextParams) => {
+  const currentSelection = editor.selection ? { ...editor.selection } : null;
 
-  const suggestionText = Node.string(suggestionTextNode);
-  const suggestionParts = suggestionText.split(" ");
+  ranges.reverse().forEach((range) => {
+    if (range === -1) return;
 
-  const currentIncorrects = findStringDifference(suggestionParts, currentParts);
-  const suggestedRanges = findIndexRanges(currentText, currentIncorrects);
+    toggleMarkHighlight({
+      editor,
+      suggestion,
+      suggestionRange: range,
+    });
+  });
 
-  return suggestedRanges;
+  if (currentSelection) Transforms.select(editor, currentSelection);
 };
 
 export const highlightSuggestions = (
@@ -107,33 +94,30 @@ export const highlightSuggestions = (
   suggestions: SuggestionItem[]
 ) => {
   for (let i = suggestions.length - 1; i >= 0; i--) {
-    const hasPath = editor.hasPath(suggestions[i].path);
+    const suggestion = suggestions[i];
+    const hasPath = editor.hasPath(suggestion.path);
 
     if (!hasPath) return;
 
-    const currentSelection = editor.selection ? { ...editor.selection } : null;
+    const currentTextNode = Editor.node(editor, suggestion.path)[0];
 
-    const currentTextNode = Editor.node(
-      editor,
-      suggestions[i].path
-    )[0] as BaseText;
+    const currentText = Node.string(currentTextNode);
+    const currentParts = currentText.split(" ");
 
-    const suggestionRanges = getSuggestionRanges(
-      currentTextNode,
-      suggestions[i]
+    const suggestionText = Node.string(suggestion);
+    const suggestionParts = suggestionText.split(" ");
+
+    const [currentIncorrects] = findStringDifference(
+      suggestionParts,
+      currentParts
     );
 
-    suggestionRanges.reverse().forEach((range) => {
-      if (range === -1) return;
+    const indexRanges = findIndexRanges(currentText, currentIncorrects);
 
-      toggleMarkHighlight({
-        editor,
-        currentTextNode,
-        suggestion: suggestions[i],
-        suggestionRange: range,
-      });
+    highlightText({
+      editor,
+      suggestion,
+      ranges: indexRanges,
     });
-
-    if (currentSelection) Transforms.select(editor, currentSelection);
   }
 };

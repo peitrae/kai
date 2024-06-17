@@ -53,7 +53,7 @@ const findStringDifference = (
       ...findStringDifference(rightCorrect, rightGiven),
     ];
   } else {
-    return [...givens];
+    return [...givens, ...corrects];
   }
 };
 

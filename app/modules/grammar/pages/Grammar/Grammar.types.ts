@@ -13,7 +13,12 @@ export interface SuggestionItem extends BaseText {
 
 export interface ToggleMarkHighlightParams {
   editor: ReactEditor;
-  currentTextNode: BaseText;
   suggestion: SuggestionItem;
   suggestionRange: number[];
+}
+
+export interface HighlighTextParams {
+  editor: ReactEditor;
+  ranges: (number[] | -1)[];
+  suggestion: SuggestionItem;
 }

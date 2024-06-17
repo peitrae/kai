@@ -3,4 +3,5 @@ export type {
   AddTextIdentifierParams,
   SuggestionItem,
   ToggleMarkHighlightParams,
+  HighlighTextParams,
 } from "./Grammar.types";
