@@ -3,10 +3,12 @@ import { ReactEditor } from "slate-react";
 
 import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
+import findIndexRanges from "~/utils/findIndexRange";
+import { Suggestion } from "../../controller";
+
 import {
   AddTextIdentifierParams,
   HighlighTextParams,
-  SuggestionItem,
   ToggleMarkHighlightParams,
 } from ".";
 
@@ -35,20 +37,6 @@ export const addTextIdentifier = ({
 
     return newNode;
   });
-};
-
-const findIndexRanges = (text: string, char: string) => {
-  const indexRanges: (number[] | -1)[] = [];
-
-  const startIndex = text.indexOf(char);
-  if (startIndex !== -1) {
-    const endIndex = startIndex + char.length - 1;
-    indexRanges.push([startIndex, endIndex]);
-  } else {
-    indexRanges.push(-1);
-  }
-
-  return indexRanges;
 };
 
 const toggleMarkHighlight = ({
@@ -91,7 +79,7 @@ const highlightText = ({ editor, suggestion, ranges }: HighlighTextParams) => {
 
 export const highlightSuggestions = (
   editor: ReactEditor,
-  suggestions: SuggestionItem[]
+  suggestions: Suggestion[]
 ) => {
   for (let i = suggestions.length - 1; i >= 0; i--) {
     const suggestion = suggestions[i];
@@ -112,12 +100,12 @@ export const highlightSuggestions = (
       currentParts
     );
 
-    const indexRanges = findIndexRanges(currentText, currentIncorrects);
+    const incorrectRanges = findIndexRanges(currentText, currentIncorrects);
 
     highlightText({
       editor,
       suggestion,
-      ranges: indexRanges,
+      ranges: incorrectRanges,
     });
   }
 };

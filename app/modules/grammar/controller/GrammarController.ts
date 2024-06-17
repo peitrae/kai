@@ -1,7 +1,8 @@
-import { SuggestionItem } from "../pages/Grammar";
 import { json } from "@remix-run/node";
 
-const correctValue: SuggestionItem[] = [
+import { Suggestion } from ".";
+
+const correctValue: Suggestion[] = [
   {
     text: "She doesn't like apples.",
     path: [0, 0],

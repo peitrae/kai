@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Descendant, createEditor } from "slate";
+import { Descendant, Editor, Node, createEditor } from "slate";
 import { useFetcher } from "@remix-run/react";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
@@ -7,12 +7,16 @@ import classNames from "classnames";
 
 import debounce from "~/utils/debounce";
 import { RichtextEditor, withHtml } from "~/components/RichtextEditor";
-import { GrammarSuggestionList } from "../../components/GrammarSuggestionList";
-import { GrammarController } from "../../controller";
+import {
+  GrammarSuggestionList,
+  SuggestionItem,
+} from "../../components/GrammarSuggestionList";
+import { GrammarController, Suggestion } from "../../controller";
+import findStringDifference from "~/utils/findStringDifference";
+import findIndexRanges from "~/utils/findIndexRange";
 
 import styles from "./Grammar.module.sass";
 import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
-import { SuggestionItem } from ".";
 
 export async function action() {
   const grammar = new GrammarController();
@@ -55,15 +59,64 @@ const initialValue = [
 ];
 
 const Grammar = () => {
-  const fetcher = useFetcher<SuggestionItem[]>();
+  const fetcher = useFetcher<Suggestion[]>();
+  const [suggestionList, setSuggestionList] = useState<SuggestionItem[]>([]);
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
   );
 
-  useEffect(() => {
-    if (!fetcher.data) return;
+  const splitString = (current: string, at: number[]) => {
+    const [from, to] = at;
 
-    highlightSuggestions(editor, fetcher.data);
+    return [current.substring(0, from), current.substring(to + 1)];
+  };
+
+  const parseSuggestionItem = (suggestion: Suggestion): SuggestionItem => {
+    const parentNode = Editor.parent(editor, suggestion.path)[0];
+    const parentText = Node.string(parentNode);
+
+    const currentNode = Editor.node(editor, suggestion.path)[0];
+    const currentText = Node.string(currentNode);
+    const currentParts = currentText.split(" ");
+
+    const suggestionParts = suggestion.text.split(" ");
+
+    const [incorrectText, suggestedText] = findStringDifference(
+      suggestionParts,
+      currentParts
+    );
+
+    const incorrectRange = findIndexRanges(parentText, incorrectText);
+
+    const [correctLeft, correctRight] = splitString(
+      parentText,
+      incorrectRange[0] as number[]
+    );
+
+    const suggestionContent = {
+      correctLeft,
+      correctRight,
+      incorrectText,
+      suggestedText,
+    };
+
+    return {
+      id: suggestion.id,
+      path: suggestion.path,
+      incorrectText,
+      suggestionContent,
+    };
+  };
+
+  useEffect(() => {
+    const suggestions = fetcher.data;
+
+    if (!suggestions) return;
+
+    const list = suggestions.map(parseSuggestionItem);
+
+    setSuggestionList(list);
+    highlightSuggestions(editor, suggestions);
   }, [fetcher.data]);
 
   const onEditorChange = debounce((value: Descendant[]) => {
@@ -84,7 +137,10 @@ const Grammar = () => {
         placeholder="Type or paste your text here"
         onValueChange={onEditorChange}
       />
-      <GrammarSuggestionList className={styles.grammarSuggestionList} />
+      <GrammarSuggestionList
+        list={suggestionList}
+        className={styles.grammarSuggestionList}
+      />
     </main>
   );
 };

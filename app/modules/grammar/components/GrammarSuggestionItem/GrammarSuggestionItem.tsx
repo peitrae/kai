@@ -5,15 +5,16 @@ import {
   useRef,
   useState,
 } from "react";
+import classNames from "classnames";
 
 import { Button } from "~/components/Button";
+import { GrammarSuggestionItemDesc } from "../GrammarSuggestionItemDesc";
 
 import styles from "./GrammarSuggestionItem.module.sass";
 import {
   GrammarSuggestionItemActionsProps,
   GrammarSuggestionItemProps,
 } from ".";
-import classNames from "classnames";
 
 const GrammarSuggestionItemActions = forwardRef(
   (
@@ -37,7 +38,10 @@ const GrammarSuggestionItemActions = forwardRef(
   )
 );
 
-const GrammarSuggestionItem = ({ className }: GrammarSuggestionItemProps) => {
+const GrammarSuggestionItem = ({
+  data,
+  className,
+}: GrammarSuggestionItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const actionRef = useRef(null);
 
@@ -60,7 +64,7 @@ const GrammarSuggestionItem = ({ className }: GrammarSuggestionItemProps) => {
       onClick={toggleExpand}
     >
       <div className={styles.summary}>
-        <span>Hello</span>
+        <span>{data.incorrectText}</span>
         {!isExpanded && (
           <GrammarSuggestionItemActions
             ref={actionRef}
@@ -72,12 +76,7 @@ const GrammarSuggestionItem = ({ className }: GrammarSuggestionItemProps) => {
       {isExpanded && (
         <div className={styles.full}>
           <span className={styles.fullText}>
-            <span className={styles.incorrectMark}> Experts</span>
-            <span className={styles.suggestedMark}> Xperts does</span> believe
-            <span className={styles.incorrectMark}> industrial</span>{" "}
-            development
-            <span className={styles.incorrectMark}> will help the</span>
-            <span className={styles.suggestedMark}> that wont</span> economy.
+            <GrammarSuggestionItemDesc content={data.suggestionContent} />
           </span>
           <GrammarSuggestionItemActions
             ref={actionRef}
