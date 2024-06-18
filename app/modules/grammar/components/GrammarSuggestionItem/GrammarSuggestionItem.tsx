@@ -48,10 +48,10 @@ const GrammarSuggestionItem = ({ data }: GrammarSuggestionItemProps) => {
     <AccordionItem id={data.id} className={styles.container}>
       <AccordionButton className={styles.summary}>
         {activeId === data.id ? (
-          <GrammarSuggestionItemDesc content={data.suggestionContent} />
+          <GrammarSuggestionItemDesc content={data.content} />
         ) : (
           <>
-            <span className={styles.title}>{data.incorrectText}</span>
+            <span className={styles.title}>{data.content.incorrectText}</span>
             <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
           </>
         )}

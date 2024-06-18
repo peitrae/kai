@@ -1,13 +1,12 @@
 import { HTMLAttributes } from "react";
-import { Path } from "slate";
+import { Range } from "slate";
 
 import { SuggestionItemContent } from "../GrammarSuggestionItemDesc";
 
 export interface SuggestionItem {
   id: string;
-  path: Path;
-  incorrectText: string;
-  suggestionContent: SuggestionItemContent;
+  range: Range;
+  content: SuggestionItemContent;
 }
 
 export interface GrammarSuggestionListProps

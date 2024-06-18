@@ -3,4 +3,6 @@ export type {
   AddTextIdentifierParams,
   ToggleMarkHighlightParams,
   HighlighTextParams,
+  FindHighlightedNewRange,
+  HighlightedItem,
 } from "./Grammar.types";

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Descendant, Editor, Node, createEditor } from "slate";
+import { Descendant, createEditor } from "slate";
 import { useFetcher } from "@remix-run/react";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
@@ -12,11 +12,11 @@ import {
   SuggestionItem,
 } from "../../components/GrammarSuggestionList";
 import { GrammarController, Suggestion } from "../../controller";
-import findStringDifference from "~/utils/findStringDifference";
 import findIndexRanges from "~/utils/findIndexRange";
 
 import styles from "./Grammar.module.sass";
 import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
+import { HighlightedItem } from ".";
 
 export async function action() {
   const grammar = new GrammarController();
@@ -65,46 +65,24 @@ const Grammar = () => {
     withHtml(withReact(withHistory(createEditor())))
   );
 
-  const splitString = (current: string, at: number[]) => {
-    const [from, to] = at;
-
-    return [current.substring(0, from), current.substring(to + 1)];
-  };
-
-  const parseSuggestionItem = (suggestion: Suggestion): SuggestionItem => {
-    const parentNode = Editor.parent(editor, suggestion.path)[0];
-    const parentText = Node.string(parentNode);
-
-    const currentNode = Editor.node(editor, suggestion.path)[0];
-    const currentText = Node.string(currentNode);
-    const currentParts = currentText.split(" ");
-
-    const suggestionParts = suggestion.text.split(" ");
-
-    const [incorrectText, suggestedText] = findStringDifference(
-      suggestionParts,
-      currentParts
-    );
+  const parseSuggestion = (
+    suggestion: Suggestion,
+    highligted: HighlightedItem
+  ) => {
+    const { parentText, incorrectText, suggestedText, range } = highligted;
 
     const incorrectRange = findIndexRanges(parentText, incorrectText);
-
-    const [correctLeft, correctRight] = splitString(
-      parentText,
-      incorrectRange[0] as number[]
-    );
-
-    const suggestionContent = {
-      correctLeft,
-      correctRight,
-      incorrectText,
-      suggestedText,
-    };
+    const [from, to] = incorrectRange[0] as number[];
 
     return {
       id: suggestion.id,
-      path: suggestion.path,
-      incorrectText,
-      suggestionContent,
+      range,
+      content: {
+        incorrectText,
+        correctLeft: parentText.substring(0, from),
+        correctRight: parentText.substring(to + 1),
+        suggestedText,
+      },
     };
   };
 
@@ -113,10 +91,12 @@ const Grammar = () => {
 
     if (!suggestions) return;
 
-    const list = suggestions.map(parseSuggestionItem);
+    const highlighted = highlightSuggestions(editor, suggestions);
 
+    const list = suggestions.map((suggestion, i) =>
+      parseSuggestion(suggestion, highlighted[i])
+    );
     setSuggestionList(list);
-    highlightSuggestions(editor, suggestions);
   }, [fetcher.data]);
 
   const onEditorChange = debounce((value: Descendant[]) => {

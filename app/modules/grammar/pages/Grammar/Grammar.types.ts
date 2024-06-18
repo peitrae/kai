@@ -1,4 +1,4 @@
-import { Descendant, Path } from "slate";
+import { Descendant, Path, Range } from "slate";
 import { ReactEditor } from "slate-react";
 
 import { Suggestion } from "../../controller";
@@ -19,4 +19,20 @@ export interface HighlighTextParams {
   editor: ReactEditor;
   ranges: (number[] | -1)[];
   suggestion: Suggestion;
+}
+
+export interface FindHighlightedNewRange {
+  editor: ReactEditor;
+  id: string;
+  incorrectText: string;
+  suggestedText: string;
+  path: Path;
+}
+
+export interface HighlightedItem {
+  id: string;
+  suggestedText: string;
+  incorrectText: string;
+  parentText: string;
+  range: Range;
 }

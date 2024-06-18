@@ -8,7 +8,9 @@ import { Suggestion } from "../../controller";
 
 import {
   AddTextIdentifierParams,
+  FindHighlightedNewRange,
   HighlighTextParams,
+  HighlightedItem,
   ToggleMarkHighlightParams,
 } from ".";
 
@@ -61,6 +63,34 @@ const toggleMarkHighlight = ({
   }
 };
 
+const findHighlightedNewRange = ({
+  editor,
+  path,
+  ...highlighted
+}: FindHighlightedNewRange): HighlightedItem => {
+  // TODO: parentPath and path is possibly has the same value, improve it later
+  const [parentNode, parentPath] = Editor.parent(editor, path);
+
+  const childNewIndex = parentNode.children.findIndex((node) => {
+    if (!Text.isText(node)) return;
+    if (node.text !== highlighted.incorrectText) return;
+
+    return true;
+  });
+
+  return {
+    ...highlighted,
+    parentText: Node.string(parentNode),
+    range: {
+      anchor: { path: [...parentPath, childNewIndex], offset: 0 },
+      focus: {
+        path: [...parentPath, childNewIndex],
+        offset: highlighted.incorrectText!.length,
+      },
+    },
+  };
+};
+
 const highlightText = ({ editor, suggestion, ranges }: HighlighTextParams) => {
   const currentSelection = editor.selection ? { ...editor.selection } : null;
 
@@ -81,31 +111,55 @@ export const highlightSuggestions = (
   editor: ReactEditor,
   suggestions: Suggestion[]
 ) => {
+  const highlighted = [];
+
   for (let i = suggestions.length - 1; i >= 0; i--) {
     const suggestion = suggestions[i];
     const hasPath = editor.hasPath(suggestion.path);
 
-    if (!hasPath) return;
+    if (!hasPath) continue;
 
-    const currentTextNode = Editor.node(editor, suggestion.path)[0];
-
+    const currentTextNode = Node.get(editor, suggestion.path);
     const currentText = Node.string(currentTextNode);
     const currentParts = currentText.split(" ");
 
     const suggestionText = Node.string(suggestion);
     const suggestionParts = suggestionText.split(" ");
 
-    const [currentIncorrects] = findStringDifference(
+    const [incorrectText, suggestedText] = findStringDifference(
       suggestionParts,
       currentParts
     );
 
-    const incorrectRanges = findIndexRanges(currentText, currentIncorrects);
+    const incorrectRanges = findIndexRanges(currentText, incorrectText);
 
     highlightText({
       editor,
       suggestion,
       ranges: incorrectRanges,
     });
+
+    highlighted.push({
+      id: suggestion.id,
+      suggestedText,
+      incorrectText,
+      path: suggestion.path,
+    });
   }
+
+  const highlightedNewRange = highlighted
+    .reverse()
+    .map((item) => findHighlightedNewRange({ editor, ...item }));
+
+  // const highlightNewRange = findHighlightedNewRange({
+  //   editor,
+  //   id: suggestion.id,
+  //   suggestedText,
+  //   incorrectText,
+  //   path: suggestion.path,
+  // });
+
+  // highlighted.push(highlightNewRange);
+
+  return highlightedNewRange;
 };
