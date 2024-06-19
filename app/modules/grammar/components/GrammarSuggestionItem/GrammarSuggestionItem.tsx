@@ -44,7 +44,7 @@ const GrammarSuggestionItem = ({
   content,
 }: GrammarSuggestionItemProps) => {
   const { activeId } = useAccordion();
-  const { onApplySuggestion } = useContext(
+  const { onApplySuggestion, onRemoveHighlight } = useContext(
     GrammarContext
   ) as GrammarContextValue;
 
@@ -55,7 +55,7 @@ const GrammarSuggestionItem = ({
       range,
     });
 
-  const ignore = () => console.log("Ignore!");
+  const ignore = () => onRemoveHighlight({ id, range });
 
   return (
     <AccordionItem id={id} className={styles.container}>

@@ -39,10 +39,14 @@ export interface HighlightedItem {
 
 export interface GrammarContextValue {
   onApplySuggestion: (params: OnApplySuggestionParams) => void;
+  onRemoveHighlight: (params: OnRemoveHighlightParams) => void;
 }
 
-export interface OnApplySuggestionParams {
+export interface OnRemoveHighlightParams {
   id: string;
-  suggestedText: string;
   range: Range;
+}
+
+export interface OnApplySuggestionParams extends OnRemoveHighlightParams {
+  suggestedText: string;
 }

@@ -8,4 +8,5 @@ export type {
   HighlightedItem,
   GrammarContextValue,
   OnApplySuggestionParams,
+  OnRemoveHighlightParams,
 } from "./Grammar.types";

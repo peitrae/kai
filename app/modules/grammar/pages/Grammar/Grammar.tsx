@@ -16,9 +16,14 @@ import {
 import { GrammarController, Suggestion } from "../../controller";
 import findIndexRanges from "~/utils/findIndexRange";
 import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
+import {
+  GrammarContext,
+  HighlightedItem,
+  OnApplySuggestionParams,
+  OnRemoveHighlightParams,
+} from ".";
 
 import styles from "./Grammar.module.sass";
-import { GrammarContext, HighlightedItem, OnApplySuggestionParams } from ".";
 
 export async function action() {
   const grammar = new GrammarController();
@@ -120,9 +125,12 @@ const Grammar = () => {
     suggestedText,
     range,
   }: OnApplySuggestionParams) => {
-    const currentSelection = editor.selection ? { ...editor.selection } : null;
-
     editor.insertText(suggestedText, { at: range });
+    onRemoveHighlight({ id, range });
+  };
+
+  const onRemoveHighlight = ({ id, range }: OnRemoveHighlightParams) => {
+    const currentSelection = editor.selection ? { ...editor.selection } : null;
 
     editor.select(range);
     editor.removeMark("highlight");
@@ -134,7 +142,7 @@ const Grammar = () => {
 
   return (
     <main className={classNames("page", styles.grammar)}>
-      <GrammarContext.Provider value={{ onApplySuggestion }}>
+      <GrammarContext.Provider value={{ onApplySuggestion, onRemoveHighlight }}>
         <RichtextEditor
           editor={editor}
           initialValue={initialValue}
