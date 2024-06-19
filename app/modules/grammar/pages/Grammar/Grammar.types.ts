@@ -36,3 +36,13 @@ export interface HighlightedItem {
   parentText: string;
   range: Range;
 }
+
+export interface GrammarContextValue {
+  onApplySuggestion: (params: OnApplySuggestionParams) => void;
+}
+
+export interface OnApplySuggestionParams {
+  id: string;
+  suggestedText: string;
+  range: Range;
+}

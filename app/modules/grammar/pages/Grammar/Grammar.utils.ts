@@ -54,8 +54,8 @@ const toggleMarkHighlight = ({
       focus: { path: suggestion.path, offset: focusOffset + 1 },
     });
 
-    toggleMark(editor, "highlight");
-    toggleMark(editor, "id", suggestion.id);
+    Editor.addMark(editor, "highlight", true);
+    Editor.addMark(editor, "id", suggestion.id);
 
     Transforms.deselect(editor);
   } catch (e) {
@@ -85,7 +85,7 @@ const findHighlightedNewRange = ({
       anchor: { path: [...parentPath, childNewIndex], offset: 0 },
       focus: {
         path: [...parentPath, childNewIndex],
-        offset: highlighted.incorrectText!.length,
+        offset: highlighted.suggestedText.length,
       },
     },
   };
@@ -131,6 +131,8 @@ export const highlightSuggestions = (
       currentParts
     );
 
+    if (!incorrectText) continue;
+
     const incorrectRanges = findIndexRanges(currentText, incorrectText);
 
     highlightText({
@@ -150,16 +152,6 @@ export const highlightSuggestions = (
   const highlightedNewRange = highlighted
     .reverse()
     .map((item) => findHighlightedNewRange({ editor, ...item }));
-
-  // const highlightNewRange = findHighlightedNewRange({
-  //   editor,
-  //   id: suggestion.id,
-  //   suggestedText,
-  //   incorrectText,
-  //   path: suggestion.path,
-  // });
-
-  // highlighted.push(highlightNewRange);
 
   return highlightedNewRange;
 };

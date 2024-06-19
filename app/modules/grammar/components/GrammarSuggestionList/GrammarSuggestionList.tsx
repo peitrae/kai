@@ -5,6 +5,7 @@ import { GrammarSuggestionItem } from "../GrammarSuggestionItem";
 import styles from "./GrammarSuggestionList.module.sass";
 import { GrammarSuggestionListProps } from ".";
 import { Accordion } from "~/components/Accordion";
+import { range } from "slate";
 
 const GrammarSuggestionList = ({
   list,
@@ -18,7 +19,12 @@ const GrammarSuggestionList = ({
       </header>
       <Accordion>
         {list.map((suggestion) => (
-          <GrammarSuggestionItem key={suggestion.id} data={suggestion} />
+          <GrammarSuggestionItem
+            key={suggestion.id}
+            id={suggestion.id}
+            range={suggestion.range}
+            content={suggestion.content}
+          />
         ))}
       </Accordion>
     </section>

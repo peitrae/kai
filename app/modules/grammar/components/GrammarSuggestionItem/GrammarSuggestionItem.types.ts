@@ -1,10 +1,11 @@
-import { HTMLAttributes } from "react";
+import { Range } from "slate";
 
-import { SuggestionItem } from "../GrammarSuggestionList";
+import { SuggestionContent } from "../GrammarSuggestionItemDesc";
 
-export interface GrammarSuggestionItemProps
-  extends HTMLAttributes<HTMLLIElement> {
-  data: SuggestionItem;
+export interface GrammarSuggestionItemProps {
+  id: string;
+  range: Range;
+  content: SuggestionContent;
 }
 
 export interface GrammarSuggestionItemActionsProps {

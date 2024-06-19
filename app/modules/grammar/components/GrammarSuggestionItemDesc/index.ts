@@ -1,5 +1,5 @@
 export { default as GrammarSuggestionItemDesc } from "./GrammarSuggestionItemDesc";
 export type {
   GrammarSuggestionDescProps,
-  SuggestionItemContent,
+  SuggestionContent,
 } from "./GrammarSuggestionItemDesc.types";

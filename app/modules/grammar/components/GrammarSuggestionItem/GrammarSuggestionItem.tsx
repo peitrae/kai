@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef } from "react";
+import { ForwardedRef, forwardRef, useContext } from "react";
 
 import { Button } from "~/components/Button";
 import {
@@ -14,6 +14,7 @@ import {
   GrammarSuggestionItemActionsProps,
   GrammarSuggestionItemProps,
 } from ".";
+import { GrammarContext, GrammarContextValue } from "../../pages/Grammar";
 
 const GrammarSuggestionItemActions = forwardRef(
   (
@@ -37,21 +38,33 @@ const GrammarSuggestionItemActions = forwardRef(
   )
 );
 
-const GrammarSuggestionItem = ({ data }: GrammarSuggestionItemProps) => {
+const GrammarSuggestionItem = ({
+  id,
+  range,
+  content,
+}: GrammarSuggestionItemProps) => {
   const { activeId } = useAccordion();
+  const { onApplySuggestion } = useContext(
+    GrammarContext
+  ) as GrammarContextValue;
 
-  const apply = () => console.log("Apply!");
+  const apply = () =>
+    onApplySuggestion({
+      id,
+      suggestedText: content.suggestedText,
+      range,
+    });
 
   const ignore = () => console.log("Ignore!");
 
   return (
-    <AccordionItem id={data.id} className={styles.container}>
+    <AccordionItem id={id} className={styles.container}>
       <AccordionButton className={styles.summary}>
-        {activeId === data.id ? (
-          <GrammarSuggestionItemDesc content={data.content} />
+        {activeId === id ? (
+          <GrammarSuggestionItemDesc content={content} />
         ) : (
           <>
-            <span className={styles.title}>{data.content.incorrectText}</span>
+            <span className={styles.title}>{content.incorrectText}</span>
             <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
           </>
         )}

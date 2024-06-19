@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Descendant, createEditor } from "slate";
+import { Descendant, Transforms, createEditor } from "slate";
 import { useFetcher } from "@remix-run/react";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
@@ -13,10 +15,10 @@ import {
 } from "../../components/GrammarSuggestionList";
 import { GrammarController, Suggestion } from "../../controller";
 import findIndexRanges from "~/utils/findIndexRange";
+import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
 
 import styles from "./Grammar.module.sass";
-import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
-import { HighlightedItem } from ".";
+import { GrammarContext, HighlightedItem, OnApplySuggestionParams } from ".";
 
 export async function action() {
   const grammar = new GrammarController();
@@ -64,6 +66,7 @@ const Grammar = () => {
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
   );
+  const [submitted, setSubmitted] = useState(false);
 
   const parseSuggestion = (
     suggestion: Suggestion,
@@ -93,34 +96,57 @@ const Grammar = () => {
 
     const highlighted = highlightSuggestions(editor, suggestions);
 
-    const list = suggestions.map((suggestion, i) =>
-      parseSuggestion(suggestion, highlighted[i])
+    const list = highlighted.map((item, i) =>
+      parseSuggestion(suggestions[i], item)
     );
     setSuggestionList(list);
   }, [fetcher.data]);
 
   const onEditorChange = debounce((value: Descendant[]) => {
+    if (submitted) return;
+
     const body = addTextIdentifier({ editor, nodes: value });
 
     fetcher.submit(JSON.stringify(body), {
       method: "post",
       encType: "application/json",
     });
+
+    setSubmitted(true);
   }, 500);
+
+  const onApplySuggestion = ({
+    id,
+    suggestedText,
+    range,
+  }: OnApplySuggestionParams) => {
+    const currentSelection = editor.selection ? { ...editor.selection } : null;
+
+    editor.insertText(suggestedText, { at: range });
+
+    editor.select(range);
+    editor.removeMark("highlight");
+
+    if (currentSelection) Transforms.select(editor, currentSelection);
+
+    setSuggestionList((list) => list.filter((item) => item.id !== id));
+  };
 
   return (
     <main className={classNames("page", styles.grammar)}>
-      <RichtextEditor
-        editor={editor}
-        initialValue={initialValue}
-        className={styles.grammarEditor}
-        placeholder="Type or paste your text here"
-        onValueChange={onEditorChange}
-      />
-      <GrammarSuggestionList
-        list={suggestionList}
-        className={styles.grammarSuggestionList}
-      />
+      <GrammarContext.Provider value={{ onApplySuggestion }}>
+        <RichtextEditor
+          editor={editor}
+          initialValue={initialValue}
+          className={styles.grammarEditor}
+          placeholder="Type or paste your text here"
+          onValueChange={onEditorChange}
+        />
+        <GrammarSuggestionList
+          list={suggestionList}
+          className={styles.grammarSuggestionList}
+        />
+      </GrammarContext.Provider>
     </main>
   );
 };

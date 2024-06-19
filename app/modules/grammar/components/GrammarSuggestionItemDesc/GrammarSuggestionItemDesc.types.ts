@@ -1,4 +1,4 @@
-export interface SuggestionItemContent {
+export interface SuggestionContent {
   correctLeft: string;
   correctRight: string;
   incorrectText: string;
@@ -6,5 +6,5 @@ export interface SuggestionItemContent {
 }
 
 export interface GrammarSuggestionDescProps {
-  content: SuggestionItemContent;
+  content: SuggestionContent;
 }
