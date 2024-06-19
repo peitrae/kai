@@ -17,7 +17,7 @@ const GrammarSuggestionList = ({
         <h2 className={styles.title}>Suggestion List</h2>
         <span className={styles.suggestionAmount}>{list.length}</span>
       </header>
-      <Accordion>
+      <Accordion className={styles.accordion}>
         {list.map((suggestion) => (
           <GrammarSuggestionItem
             key={suggestion.id}
