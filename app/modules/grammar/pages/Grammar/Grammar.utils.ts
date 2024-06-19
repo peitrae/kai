@@ -1,7 +1,6 @@
 import { Descendant, Editor, Element, Node, Text, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
-import { toggleMark } from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
 import findIndexRanges from "~/utils/findIndexRange";
 import { Suggestion } from "../../controller";
@@ -49,15 +48,15 @@ const toggleMarkHighlight = ({
   const [anchorOffset, focusOffset] = suggestionRange;
 
   try {
-    Transforms.select(editor, {
+    editor.select({
       anchor: { path: suggestion.path, offset: anchorOffset },
       focus: { path: suggestion.path, offset: focusOffset + 1 },
     });
 
-    Editor.addMark(editor, "highlight", true);
-    Editor.addMark(editor, "id", suggestion.id);
+    editor.addMark("highlight", true);
+    editor.addMark("id", suggestion.id);
 
-    Transforms.deselect(editor);
+    editor.deselect();
   } catch (e) {
     console.error(`Unable to highlight: "${suggestion.text}"`);
   }
@@ -104,7 +103,7 @@ const highlightText = ({ editor, suggestion, ranges }: HighlighTextParams) => {
     });
   });
 
-  if (currentSelection) Transforms.select(editor, currentSelection);
+  if (currentSelection) editor.select(currentSelection);
 };
 
 export const highlightSuggestions = (

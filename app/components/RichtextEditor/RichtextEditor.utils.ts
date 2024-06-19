@@ -4,7 +4,6 @@ import {
   BaseText,
   Descendant,
   Editor,
-  Transforms,
   Element as SlateElement,
 } from "slate";
 import { ReactEditor } from "slate-react";
@@ -82,9 +81,9 @@ export const toggleMark = (
   const isActive = isMarkActive(editor, format);
 
   if (isActive) {
-    Editor.removeMark(editor, format);
+    editor.removeMark(format);
   } else {
-    Editor.addMark(editor, format, value);
+    editor.addMark(format, value);
   }
 };
 
@@ -96,7 +95,7 @@ export const toggleBlock = (editor: BaseEditor, format: string) => {
   );
   const isList = LIST_TYPES.includes(format);
 
-  Transforms.unwrapNodes(editor, {
+  editor.unwrapNodes({
     match: (node) =>
       !Editor.isEditor(node) &&
       SlateElement.isElement(node) &&
@@ -115,11 +114,12 @@ export const toggleBlock = (editor: BaseEditor, format: string) => {
       type: isActive ? "paragraph" : isList ? "list-item" : format,
     };
   }
-  Transforms.setNodes<SlateElement>(editor, newProperties);
+
+  editor.setNodes(newProperties);
 
   if (!isActive && isList) {
     const block = { type: format, children: [] };
-    Transforms.wrapNodes(editor, block);
+    editor.wrapNodes(block);
   }
 };
 
@@ -179,7 +179,7 @@ export const withHtml = (editor: ReactEditor) => {
     if (html) {
       const parsed = new DOMParser().parseFromString(html, "text/html");
       const fragment = deserialize(parsed.body) as Descendant[];
-      Transforms.insertFragment(editor, fragment);
+      editor.insertFragment(fragment);
       return;
     }
 
