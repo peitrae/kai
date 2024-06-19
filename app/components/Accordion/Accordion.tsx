@@ -1,4 +1,4 @@
-import { MouseEventHandler, PropsWithChildren } from "react";
+import { MouseEventHandler } from "react";
 
 import {
   AccordionProvider,
@@ -7,6 +7,7 @@ import {
   useAccordionItem,
   AccordionPanelProps,
   AccordionButtonProps,
+  AccordionProps,
 } from ".";
 
 import styles from "./Accordion.module.sass";
@@ -70,9 +71,9 @@ export const AccordionItem = ({
   );
 };
 
-const Accordion = ({ children }: PropsWithChildren) => {
+const Accordion = ({ children, className }: AccordionProps) => {
   return (
-    <div className={styles.accordion}>
+    <div className={classNames(styles.accordion, className)}>
       <AccordionProvider>{children}</AccordionProvider>
     </div>
   );

@@ -10,6 +10,7 @@ export {
   useAccordionItem,
 } from "./AccordionItem.provider";
 export type {
+  AccordionProps,
   AccordionItemProps,
   AccordionButtonProps,
   AccordionPanelProps,
