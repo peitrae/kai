@@ -1,38 +1,16 @@
-import { Descendant, Path, Range } from "slate";
-import { ReactEditor } from "slate-react";
+import { Path, Range } from "slate";
 
-import { Suggestion } from "../../controller";
-
-export interface AddTextIdentifierParams {
-  editor: ReactEditor;
-  nodes: Descendant[];
-  parentPath?: Path;
-}
-
-export interface ToggleMarkHighlightParams {
-  editor: ReactEditor;
-  suggestion: Suggestion;
-  suggestionRange: number[];
-}
-
-export interface HighlighTextParams {
-  editor: ReactEditor;
-  ranges: (number[] | -1)[];
-  suggestion: Suggestion;
-}
-
-export interface FindHighlightedNewRange {
-  editor: ReactEditor;
+export interface BaseHighlighted {
   id: string;
-  incorrectText: string;
   suggestedText: string;
+  incorrectText: string;
+}
+
+export interface Highlighted extends BaseHighlighted {
   path: Path;
 }
 
-export interface HighlightedItem {
-  id: string;
-  suggestedText: string;
-  incorrectText: string;
+export interface HighlightedNewRange extends BaseHighlighted {
   parentText: string;
   range: Range;
 }

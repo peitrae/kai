@@ -1,28 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Descendant, Transforms, createEditor } from "slate";
+import { Node, Range, Text, Transforms, createEditor } from "slate";
 import { useFetcher } from "@remix-run/react";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
 import classNames from "classnames";
 
-import debounce from "~/utils/debounce";
-import { RichtextEditor, withHtml } from "~/components/RichtextEditor";
+import { withHtml } from "~/components/RichtextEditor";
 import {
   GrammarSuggestionList,
   SuggestionItem,
 } from "../../components/GrammarSuggestionList";
 import { GrammarController, Suggestion } from "../../controller";
 import findIndexRanges from "~/utils/findIndexRange";
-import { addTextIdentifier, highlightSuggestions } from "./Grammar.utils";
+import { getNodeTextParts } from "~/components/RichtextEditor/RichtextEditor.utils";
+import findStringDifference from "~/utils/findStringDifference";
+import { GrammarEditor } from "../../components/GrammarEditor";
+
 import {
   GrammarContext,
-  HighlightedItem,
+  Highlighted,
+  HighlightedNewRange,
   OnApplySuggestionParams,
   OnRemoveHighlightParams,
 } from ".";
-
 import styles from "./Grammar.module.sass";
 
 export async function action() {
@@ -30,54 +32,125 @@ export async function action() {
   return grammar.getSuggestions();
 }
 
-const initialValue = [
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "She don't like apples.",
-      },
-    ],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "The book on the table is mine",
-      },
-    ],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: "Him and I ",
-        bold: true,
-      },
-      {
-        text: "went",
-        italic: true,
-      },
-      {
-        text: " to the stare.",
-      },
-    ],
-  },
-];
-
 const Grammar = () => {
-  const fetcher = useFetcher<Suggestion[]>();
+  const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
   const [suggestionList, setSuggestionList] = useState<SuggestionItem[]>([]);
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
   );
-  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(
+    () => fetcher.data && handleOnSuggestionsChange(fetcher.data),
+    [fetcher.data]
+  );
+
+  const handleOnSuggestionsChange = (suggestions: Suggestion[]) => {
+    const highlighted = highlightSuggestions(suggestions);
+
+    const list = highlighted.map((item, i) =>
+      parseSuggestion(item, suggestions[i])
+    );
+
+    setSuggestionList(list);
+  };
+
+  const highlightSuggestions = (suggestions: Suggestion[]) => {
+    const highlighted = suggestions.reduceRight((acc, suggestion) => {
+      if (!editor.hasPath(suggestion.path)) return acc;
+
+      const parentNode = editor.parent(suggestion.path)[0];
+      const currentNode = Node.get(editor, suggestion.path);
+      const current = getNodeTextParts(currentNode);
+      const suggested = getNodeTextParts(suggestion);
+
+      const [incorrectText, suggestedText] = findStringDifference(
+        suggested.parts,
+        current.parts
+      );
+
+      if (!incorrectText) return acc;
+
+      const incorrectIndexes = findIndexRanges(current.text, incorrectText);
+
+      for (let j = incorrectIndexes.length - 1; j >= 0; j--) {
+        const indexes = incorrectIndexes[j];
+
+        if (indexes === -1) continue;
+        const [anchorOffset, focusOffset] = indexes;
+
+        const range = {
+          anchor: { path: suggestion.path, offset: anchorOffset },
+          focus: { path: suggestion.path, offset: focusOffset + 1 },
+        };
+
+        highlightText(suggestion, range);
+      }
+
+      acc.push({
+        id: suggestion.id,
+        suggestedText,
+        incorrectText,
+        path: suggestion.path,
+      });
+
+      return acc;
+    }, [] as Highlighted[]);
+
+    const highlightedNewRange: HighlightedNewRange[] = highlighted
+      .reverse()
+      .map(findHighlightedNewRange);
+
+    return highlightedNewRange;
+  };
+
+  const findHighlightedNewRange = (highlighted: Highlighted) => {
+    const { incorrectText, path, suggestedText, id } = highlighted;
+
+    const [parentNode, parentPath] = editor.parent(path);
+
+    const childNewIndex = parentNode.children.findIndex((node) => {
+      return Text.isText(node) && node.text === incorrectText;
+    });
+
+    const newPath = [...parentPath, childNewIndex];
+
+    return {
+      id,
+      suggestedText,
+      incorrectText,
+      parentText: Node.string(parentNode),
+      range: {
+        anchor: { path: newPath, offset: 0 },
+        focus: {
+          path: newPath,
+          offset: suggestedText.length,
+        },
+      },
+    };
+  };
+
+  const highlightText = (suggestion: Suggestion, range: Range) => {
+    const currentSelection = editor.selection ? { ...editor.selection } : null;
+
+    try {
+      editor.select(range);
+
+      editor.addMark("highlight", true);
+      editor.addMark("id", suggestion.id);
+
+      editor.deselect();
+    } catch (e) {
+      console.error(`Unable to highlight: "${suggestion.text}"`);
+    }
+
+    if (currentSelection) editor.select(currentSelection);
+  };
 
   const parseSuggestion = (
-    suggestion: Suggestion,
-    highligted: HighlightedItem
+    highlighted: HighlightedNewRange,
+    suggestion: Suggestion
   ) => {
-    const { parentText, incorrectText, suggestedText, range } = highligted;
+    const { parentText, incorrectText, suggestedText, range } = highlighted;
 
     const incorrectRange = findIndexRanges(parentText, incorrectText);
     const [from, to] = incorrectRange[0] as number[];
@@ -94,38 +167,13 @@ const Grammar = () => {
     };
   };
 
-  useEffect(() => {
-    const suggestions = fetcher.data;
-
-    if (!suggestions) return;
-
-    const highlighted = highlightSuggestions(editor, suggestions);
-
-    const list = highlighted.map((item, i) =>
-      parseSuggestion(suggestions[i], item)
-    );
-    setSuggestionList(list);
-  }, [fetcher.data]);
-
-  const onEditorChange = debounce((value: Descendant[]) => {
-    if (submitted) return;
-
-    const body = addTextIdentifier({ editor, nodes: value });
-
-    fetcher.submit(JSON.stringify(body), {
-      method: "post",
-      encType: "application/json",
-    });
-
-    setSubmitted(true);
-  }, 500);
-
   const onApplySuggestion = ({
     id,
     suggestedText,
     range,
   }: OnApplySuggestionParams) => {
     editor.insertText(suggestedText, { at: range });
+
     onRemoveHighlight({ id, range });
   };
 
@@ -143,13 +191,7 @@ const Grammar = () => {
   return (
     <main className={classNames("page", styles.grammar)}>
       <GrammarContext.Provider value={{ onApplySuggestion, onRemoveHighlight }}>
-        <RichtextEditor
-          editor={editor}
-          initialValue={initialValue}
-          className={styles.grammarEditor}
-          placeholder="Type or paste your text here"
-          onValueChange={onEditorChange}
-        />
+        <GrammarEditor editor={editor} className={styles.grammarEditor} />
         <GrammarSuggestionList
           list={suggestionList}
           className={styles.grammarSuggestionList}

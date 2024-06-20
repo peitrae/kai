@@ -4,6 +4,7 @@ import {
   BaseText,
   Descendant,
   Editor,
+  Node as SlateNode,
   Element as SlateElement,
 } from "slate";
 import { ReactEditor } from "slate-react";
@@ -187,4 +188,10 @@ export const withHtml = (editor: ReactEditor) => {
   };
 
   return editor;
+};
+
+export const getNodeTextParts = (node: SlateNode) => {
+  const text = SlateNode.string(node);
+  const parts = text.split(" ");
+  return { text, parts };
 };

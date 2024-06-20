@@ -1,11 +1,9 @@
 export { default } from "./Grammar";
 export { default as GrammarContext } from "./Grammar.context";
 export type {
-  AddTextIdentifierParams,
-  ToggleMarkHighlightParams,
-  HighlighTextParams,
-  FindHighlightedNewRange,
-  HighlightedItem,
+  BaseHighlighted,
+  Highlighted,
+  HighlightedNewRange,
   GrammarContextValue,
   OnApplySuggestionParams,
   OnRemoveHighlightParams,
