@@ -1,14 +1,7 @@
 import { HTMLAttributes } from "react";
-import { Range } from "slate";
-import { SuggestionContent } from "../GrammarSuggestionItemDesc";
-
-export interface SuggestionItem {
-  id: string;
-  range: Range;
-  content: SuggestionContent;
-}
+import { SuggestionMap } from "../../pages/Grammar";
 
 export interface GrammarSuggestionListProps
   extends HTMLAttributes<HTMLDivElement> {
-  list: SuggestionItem[];
+  suggestionMap: SuggestionMap;
 }

@@ -8,23 +8,18 @@ import { Accordion } from "~/components/Accordion";
 import { range } from "slate";
 
 const GrammarSuggestionList = ({
-  list,
+  suggestionMap,
   className,
 }: GrammarSuggestionListProps) => {
   return (
     <section className={classNames(styles.container, className)}>
       <header className={styles.header}>
         <h2 className={styles.title}>Suggestion List</h2>
-        <span className={styles.suggestionAmount}>{list.length}</span>
+        <span className={styles.suggestionAmount}>{suggestionMap.size}</span>
       </header>
       <Accordion className={styles.accordion}>
-        {list.map((suggestion) => (
-          <GrammarSuggestionItem
-            key={suggestion.id}
-            id={suggestion.id}
-            range={suggestion.range}
-            content={suggestion.content}
-          />
+        {Array.from(suggestionMap).map(([id, suggestion]) => (
+          <GrammarSuggestionItem key={id} id={id} data={suggestion} />
         ))}
       </Accordion>
     </section>

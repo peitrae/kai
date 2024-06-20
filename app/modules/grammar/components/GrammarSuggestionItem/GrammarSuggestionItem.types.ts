@@ -1,11 +1,9 @@
 import { Range } from "slate";
-
-import { SuggestionContent } from "../GrammarSuggestionItemDesc";
+import { SuggestionMapValue } from "../../pages/Grammar";
 
 export interface GrammarSuggestionItemProps {
   id: string;
-  range: Range;
-  content: SuggestionContent;
+  data: SuggestionMapValue;
 }
 
 export interface GrammarSuggestionItemActionsProps {

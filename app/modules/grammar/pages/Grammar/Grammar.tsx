@@ -24,6 +24,7 @@ import {
   HighlightedNewRange,
   OnApplySuggestionParams,
   OnRemoveHighlightParams,
+  SuggestionMap,
 } from ".";
 import styles from "./Grammar.module.sass";
 
@@ -34,7 +35,7 @@ export async function action() {
 
 const Grammar = () => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
-  const [suggestionList, setSuggestionList] = useState<SuggestionItem[]>([]);
+  const [suggestionMap, setSuggestionMap] = useState<SuggestionMap>(new Map());
   const [editor] = useState(() =>
     withHtml(withReact(withHistory(createEditor())))
   );
@@ -47,11 +48,17 @@ const Grammar = () => {
   const handleOnSuggestionsChange = (suggestions: Suggestion[]) => {
     const highlighted = highlightSuggestions(suggestions);
 
-    const list = highlighted.map((item, i) =>
-      parseSuggestion(item, suggestions[i])
-    );
+    // const list = highlighted.map((item, i) =>
+    //   parseSuggestion(item, suggestions[i])
+    // );
 
-    setSuggestionList(list);
+    const suggestionMap = new Map();
+    highlighted.forEach((item, i) => {
+      const { id, ...rest } = parseSuggestion(item, suggestions[i]);
+      suggestionMap.set(id, rest);
+    });
+
+    setSuggestionMap(suggestionMap);
   };
 
   const highlightSuggestions = (suggestions: Suggestion[]) => {
@@ -158,12 +165,10 @@ const Grammar = () => {
     return {
       id: suggestion.id,
       range,
-      content: {
-        incorrectText,
-        correctLeft: parentText.substring(0, from),
-        correctRight: parentText.substring(to + 1),
-        suggestedText,
-      },
+      incorrectText,
+      correctLeft: parentText.substring(0, from),
+      correctRight: parentText.substring(to + 1),
+      suggestedText,
     };
   };
 
@@ -185,7 +190,10 @@ const Grammar = () => {
 
     if (currentSelection) Transforms.select(editor, currentSelection);
 
-    setSuggestionList((list) => list.filter((item) => item.id !== id));
+    setSuggestionMap((suggestionMap) => {
+      suggestionMap.delete(id);
+      return suggestionMap;
+    });
   };
 
   return (
@@ -193,7 +201,7 @@ const Grammar = () => {
       <GrammarContext.Provider value={{ onApplySuggestion, onRemoveHighlight }}>
         <GrammarEditor editor={editor} className={styles.grammarEditor} />
         <GrammarSuggestionList
-          list={suggestionList}
+          suggestionMap={suggestionMap}
           className={styles.grammarSuggestionList}
         />
       </GrammarContext.Provider>

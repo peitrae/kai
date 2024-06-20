@@ -38,11 +38,8 @@ const GrammarSuggestionItemActions = forwardRef(
   )
 );
 
-const GrammarSuggestionItem = ({
-  id,
-  range,
-  content,
-}: GrammarSuggestionItemProps) => {
+const GrammarSuggestionItem = ({ id, data }: GrammarSuggestionItemProps) => {
+  const { range, suggestedText, incorrectText } = data;
   const { activeId } = useAccordion();
   const { onApplySuggestion, onRemoveHighlight } = useContext(
     GrammarContext
@@ -51,7 +48,7 @@ const GrammarSuggestionItem = ({
   const apply = () =>
     onApplySuggestion({
       id,
-      suggestedText: content.suggestedText,
+      suggestedText,
       range,
     });
 
@@ -61,10 +58,10 @@ const GrammarSuggestionItem = ({
     <AccordionItem id={id} className={styles.container}>
       <AccordionButton className={styles.summary}>
         {activeId === id ? (
-          <GrammarSuggestionItemDesc content={content} />
+          <GrammarSuggestionItemDesc content={data} />
         ) : (
           <>
-            <span className={styles.title}>{content.incorrectText}</span>
+            <span className={styles.title}>{incorrectText}</span>
             <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
           </>
         )}
