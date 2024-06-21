@@ -44,7 +44,11 @@ const initialValue = [
   },
 ];
 
-const GrammarEditor = ({ editor, className }: RichtextEditorProps) => {
+const GrammarEditor = ({
+  editor,
+  decorate,
+  className,
+}: RichtextEditorProps) => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
 
   const addTextIdentifier = (nodes: Descendant[], parentPath: Path = []) => {
@@ -80,6 +84,7 @@ const GrammarEditor = ({ editor, className }: RichtextEditorProps) => {
       editor={editor}
       initialValue={initialValue}
       className={className}
+      decorate={decorate}
       placeholder="Type or paste your text here"
       onValueChange={onEditorChange}
     />

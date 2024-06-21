@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Node, Range, Text, Transforms, createEditor } from "slate";
+import {
+  BaseText,
+  Node,
+  NodeEntry,
+  Path,
+  Range,
+  Text,
+  Transforms,
+  createEditor,
+} from "slate";
 import { useFetcher } from "@remix-run/react";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
@@ -14,7 +23,10 @@ import {
 } from "../../components/GrammarSuggestionList";
 import { GrammarController, Suggestion } from "../../controller";
 import findIndexRanges from "~/utils/findIndexRange";
-import { getNodeTextParts } from "~/components/RichtextEditor/RichtextEditor.utils";
+import {
+  currentWord,
+  getNodeTextParts,
+} from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
 import { GrammarEditor } from "../../components/GrammarEditor";
 
@@ -190,16 +202,55 @@ const Grammar = () => {
 
     if (currentSelection) Transforms.select(editor, currentSelection);
 
-    setSuggestionMap((suggestionMap) => {
-      suggestionMap.delete(id);
-      return suggestionMap;
+    setSuggestionMap((current) => {
+      const currentMap = new Map([...current]);
+      currentMap.delete(id);
+      return currentMap;
     });
+  };
+
+  const removeHighlightOnTextChange = ({ id, text }: BaseText, path: Path) => {
+    const suggestion = suggestionMap.get(id!);
+
+    if (!suggestion || suggestion.incorrectText === text) return;
+
+    const selectionIntersection = Range.intersection(
+      editor.selection!,
+      suggestion.range
+    );
+
+    if (!selectionIntersection) return;
+
+    const { anchor, focus } = selectionIntersection;
+
+    // NOTE: Don't remove when the text changes mark only
+    if (anchor.offset !== focus.offset) return;
+
+    onRemoveHighlight({
+      id: id!,
+      range: {
+        anchor: { path, offset: 0 },
+        focus: { path, offset: text.length },
+      },
+    });
+  };
+
+  const decorateEditor = ([node, path]: NodeEntry) => {
+    if (Text.isText(node) && node.highlight && editor.selection) {
+      removeHighlightOnTextChange(node, path);
+    }
+
+    return [];
   };
 
   return (
     <main className={classNames("page", styles.grammar)}>
       <GrammarContext.Provider value={{ onApplySuggestion, onRemoveHighlight }}>
-        <GrammarEditor editor={editor} className={styles.grammarEditor} />
+        <GrammarEditor
+          editor={editor}
+          decorate={decorateEditor}
+          className={styles.grammarEditor}
+        />
         <GrammarSuggestionList
           suggestionMap={suggestionMap}
           className={styles.grammarSuggestionList}
