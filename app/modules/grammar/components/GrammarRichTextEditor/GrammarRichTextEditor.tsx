@@ -1,13 +1,17 @@
 import { useFetcher } from "@remix-run/react";
-import { Descendant, Element, Path, Text } from "slate";
-import { ReactEditor } from "slate-react";
+import { Descendant, Element, Path } from "slate";
+import { ReactEditor, RenderLeafProps } from "slate-react";
 
 import {
-  RichtextEditor,
-  RichtextEditorProps,
-} from "~/components/RichtextEditor";
+  RichTextEditor,
+  RichTextEditorProps,
+  RichTextLeaf,
+} from "~/components/RichTextEditor";
 import debounce from "~/utils/debounce";
 import { Suggestion } from "../../controller";
+import { HighlightedText } from "../../pages/Grammar";
+
+import styles from "./GrammarRichTextEditor.module.sass";
 
 const initialValue = [
   {
@@ -44,11 +48,20 @@ const initialValue = [
   },
 ];
 
-const GrammarEditor = ({
+const GrammarEditorLeaf = ({ children, leaf, ...params }: RenderLeafProps) => {
+  const l = leaf as HighlightedText;
+
+  if (l.highlight && l.id)
+    children = <span className={styles.highlight}>{children}</span>;
+
+  return RichTextLeaf({ children, leaf, ...params });
+};
+
+const GrammarRichTextEditor = ({
   editor,
   decorate,
   className,
-}: RichtextEditorProps) => {
+}: RichTextEditorProps) => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
 
   const addTextIdentifier = (nodes: Descendant[], parentPath: Path = []) => {
@@ -56,7 +69,7 @@ const GrammarEditor = ({
       const newNode = { ...node };
       const currentPath = [...parentPath, index];
 
-      if (Text.isText(newNode)) {
+      if (editor.isHighlightedText(newNode)) {
         const key = ReactEditor.findKey(editor, node);
         newNode.path = currentPath;
         newNode.id = key.id;
@@ -80,15 +93,16 @@ const GrammarEditor = ({
   }, 500);
 
   return (
-    <RichtextEditor
+    <RichTextEditor
       editor={editor}
       initialValue={initialValue}
       className={className}
       decorate={decorate}
       placeholder="Type or paste your text here"
       onValueChange={onEditorChange}
+      renderLeaf={(props: RenderLeafProps) => <GrammarEditorLeaf {...props} />}
     />
   );
 };
 
-export default GrammarEditor;
+export default GrammarRichTextEditor;

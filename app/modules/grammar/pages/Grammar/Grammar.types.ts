@@ -1,5 +1,14 @@
-import { Path, Range } from "slate";
-import { SuggestionItem } from "../../components/GrammarSuggestionList";
+import { BaseText, Path, Range } from "slate";
+import { ReactEditor } from "slate-react";
+
+export interface HighlightedText extends BaseText {
+  highlight: boolean;
+  id: string;
+}
+
+export interface GrammarEditor extends ReactEditor {
+  isHighlightedText: (value: any) => value is HighlightedText;
+}
 
 export interface BaseHighlighted {
   id: string;

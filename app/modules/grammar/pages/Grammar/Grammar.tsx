@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  BaseText,
   Node,
   NodeEntry,
   Path,
@@ -12,23 +11,15 @@ import {
   createEditor,
 } from "slate";
 import { useFetcher } from "@remix-run/react";
-import { withReact } from "slate-react";
+import { ReactEditor, withReact } from "slate-react";
 import { withHistory } from "slate-history";
 import classNames from "classnames";
 
-import { withHtml } from "~/components/RichtextEditor";
-import {
-  GrammarSuggestionList,
-  SuggestionItem,
-} from "../../components/GrammarSuggestionList";
+import { withHtml, getNodeTextParts } from "~/components/RichTextEditor";
+import { GrammarSuggestionList } from "../../components/GrammarSuggestionList";
 import { GrammarController, Suggestion } from "../../controller";
 import findIndexRanges from "~/utils/findIndexRange";
-import {
-  currentWord,
-  getNodeTextParts,
-} from "~/components/RichtextEditor/RichtextEditor.utils";
 import findStringDifference from "~/utils/findStringDifference";
-import { GrammarEditor } from "../../components/GrammarEditor";
 
 import {
   GrammarContext,
@@ -37,19 +28,32 @@ import {
   OnApplySuggestionParams,
   OnRemoveHighlightParams,
   SuggestionMap,
+  GrammarEditor,
+  HighlightedText,
 } from ".";
 import styles from "./Grammar.module.sass";
+import { GrammarRichTextEditor } from "../../components/GrammarRichTextEditor";
 
 export async function action() {
   const grammar = new GrammarController();
   return grammar.getSuggestions();
 }
 
+export const withGrammar = (editor: ReactEditor): GrammarEditor => {
+  const e = editor as GrammarEditor;
+
+  e.isHighlightedText = (element): element is HighlightedText => {
+    return element.id && element.highlight && Text.isText(element);
+  };
+
+  return e;
+};
+
 const Grammar = () => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
   const [suggestionMap, setSuggestionMap] = useState<SuggestionMap>(new Map());
   const [editor] = useState(() =>
-    withHtml(withReact(withHistory(createEditor())))
+    withGrammar(withHtml(withReact(withHistory(createEditor()))))
   );
 
   useEffect(
@@ -59,10 +63,6 @@ const Grammar = () => {
 
   const handleOnSuggestionsChange = (suggestions: Suggestion[]) => {
     const highlighted = highlightSuggestions(suggestions);
-
-    // const list = highlighted.map((item, i) =>
-    //   parseSuggestion(item, suggestions[i])
-    // );
 
     const suggestionMap = new Map();
     highlighted.forEach((item, i) => {
@@ -77,7 +77,6 @@ const Grammar = () => {
     const highlighted = suggestions.reduceRight((acc, suggestion) => {
       if (!editor.hasPath(suggestion.path)) return acc;
 
-      const parentNode = editor.parent(suggestion.path)[0];
       const currentNode = Node.get(editor, suggestion.path);
       const current = getNodeTextParts(currentNode);
       const suggested = getNodeTextParts(suggestion);
@@ -209,7 +208,10 @@ const Grammar = () => {
     });
   };
 
-  const removeHighlightOnTextChange = ({ id, text }: BaseText, path: Path) => {
+  const removeHighlightOnTextChange = (
+    { id, text }: HighlightedText,
+    path: Path
+  ) => {
     const suggestion = suggestionMap.get(id!);
 
     if (!suggestion || suggestion.incorrectText === text) return;
@@ -236,7 +238,7 @@ const Grammar = () => {
   };
 
   const decorateEditor = ([node, path]: NodeEntry) => {
-    if (Text.isText(node) && node.highlight && editor.selection) {
+    if (editor.isHighlightedText(node) && editor.selection) {
       removeHighlightOnTextChange(node, path);
     }
 
@@ -246,7 +248,7 @@ const Grammar = () => {
   return (
     <main className={classNames("page", styles.grammar)}>
       <GrammarContext.Provider value={{ onApplySuggestion, onRemoveHighlight }}>
-        <GrammarEditor
+        <GrammarRichTextEditor
           editor={editor}
           decorate={decorateEditor}
           className={styles.grammarEditor}

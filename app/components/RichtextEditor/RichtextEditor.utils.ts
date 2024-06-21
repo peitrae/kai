@@ -124,7 +124,7 @@ export const toggleBlock = (editor: BaseEditor, format: string) => {
   }
 };
 
-const deserialize = (
+export const deserialize = (
   el: HTMLElement
 ): (Descendant | null)[] | BaseElement | BaseText | null => {
   if (el.nodeType === Node.TEXT_NODE) {
