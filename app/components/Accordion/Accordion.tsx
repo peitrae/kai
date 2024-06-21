@@ -71,10 +71,10 @@ export const AccordionItem = ({
   );
 };
 
-const Accordion = ({ children, className }: AccordionProps) => {
+const Accordion = ({ activeId, children, className }: AccordionProps) => {
   return (
     <div className={classNames(styles.accordion, className)}>
-      <AccordionProvider>{children}</AccordionProvider>
+      <AccordionProvider activeId={activeId}>{children}</AccordionProvider>
     </div>
   );
 };

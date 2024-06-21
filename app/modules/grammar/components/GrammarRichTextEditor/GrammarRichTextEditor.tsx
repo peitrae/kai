@@ -2,16 +2,13 @@ import { useFetcher } from "@remix-run/react";
 import { Descendant, Element, Path } from "slate";
 import { ReactEditor, RenderLeafProps } from "slate-react";
 
-import {
-  RichTextEditor,
-  RichTextEditorProps,
-  RichTextLeaf,
-} from "~/components/RichTextEditor";
+import { RichTextEditor, RichTextLeaf } from "~/components/RichTextEditor";
 import debounce from "~/utils/debounce";
 import { Suggestion } from "../../controller";
 import { HighlightedText } from "../../pages/Grammar";
 
 import styles from "./GrammarRichTextEditor.module.sass";
+import { GrammarRichTextEditorProps, RenderGrammarLeafProps } from ".";
 
 const initialValue = [
   {
@@ -48,11 +45,24 @@ const initialValue = [
   },
 ];
 
-const GrammarEditorLeaf = ({ children, leaf, ...params }: RenderLeafProps) => {
+const GrammarEditorLeaf = ({
+  children,
+  leaf,
+  onHighlightTextClick,
+  ...params
+}: RenderGrammarLeafProps) => {
   const l = leaf as HighlightedText;
 
   if (l.highlight && l.id)
-    children = <span className={styles.highlight}>{children}</span>;
+    children = (
+      <span
+        role="presentation"
+        className={styles.highlight}
+        onClick={() => onHighlightTextClick(l.id)}
+      >
+        {children}
+      </span>
+    );
 
   return RichTextLeaf({ children, leaf, ...params });
 };
@@ -61,8 +71,13 @@ const GrammarRichTextEditor = ({
   editor,
   decorate,
   className,
-}: RichTextEditorProps) => {
+  onHighlightTextClick,
+}: GrammarRichTextEditorProps) => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
+
+  const renderLeaf = (props: RenderLeafProps) => (
+    <GrammarEditorLeaf onHighlightTextClick={onHighlightTextClick} {...props} />
+  );
 
   const addTextIdentifier = (nodes: Descendant[], parentPath: Path = []) => {
     return nodes.map((node, index) => {
@@ -100,7 +115,7 @@ const GrammarRichTextEditor = ({
       decorate={decorate}
       placeholder="Type or paste your text here"
       onValueChange={onEditorChange}
-      renderLeaf={(props: RenderLeafProps) => <GrammarEditorLeaf {...props} />}
+      renderLeaf={renderLeaf}
     />
   );
 };

@@ -1,4 +1,5 @@
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { AccordionProviderProps } from "./Accordion.types";
 
 const AccordionContext = createContext({});
 
@@ -6,15 +7,28 @@ const AccordionContext = createContext({});
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const useAccordion = () => useContext<any>(AccordionContext);
 
-export const AccordionProvider = ({ children }: PropsWithChildren) => {
-  const [activeId, setActiveId] = useState<string | null>(null);
+export const AccordionProvider = ({
+  activeId = undefined,
+  children,
+}: AccordionProviderProps) => {
+  const [currentActiveId, setCurrentActiveId] = useState<string | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (!activeId) return;
+
+    setCurrentActiveId(activeId);
+  }, [activeId]);
 
   const toggleActiveId = (id: string) => {
-    setActiveId(activeId === id ? null : id);
+    setCurrentActiveId(currentActiveId === id ? undefined : id);
   };
 
   return (
-    <AccordionContext.Provider value={{ activeId, toggleActiveId }}>
+    <AccordionContext.Provider
+      value={{ activeId: currentActiveId, toggleActiveId }}
+    >
       {children}
     </AccordionContext.Provider>
   );

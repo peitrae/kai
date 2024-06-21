@@ -52,6 +52,9 @@ export const withGrammar = (editor: ReactEditor): GrammarEditor => {
 const Grammar = () => {
   const fetcher = useFetcher<Suggestion[]>({ key: "grammar" });
   const [suggestionMap, setSuggestionMap] = useState<SuggestionMap>(new Map());
+  const [expandSuggestionId, setExpandSuggestionId] = useState<
+    string | undefined
+  >(undefined);
   const [editor] = useState(() =>
     withGrammar(withHtml(withReact(withHistory(createEditor()))))
   );
@@ -252,8 +255,10 @@ const Grammar = () => {
           editor={editor}
           decorate={decorateEditor}
           className={styles.grammarEditor}
+          onHighlightTextClick={(id) => setExpandSuggestionId(id)}
         />
         <GrammarSuggestionList
+          activeId={expandSuggestionId}
           suggestionMap={suggestionMap}
           className={styles.grammarSuggestionList}
         />
