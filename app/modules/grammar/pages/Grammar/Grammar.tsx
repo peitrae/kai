@@ -217,32 +217,20 @@ const Grammar = () => {
   ) => {
     const suggestion = suggestionMap.get(id!);
 
-    if (!suggestion || suggestion.incorrectText === text) return;
+    if (!suggestion || suggestion.incorrectText === text) return [];
 
-    const selectionIntersection = Range.intersection(
-      editor.selection!,
-      suggestion.range
-    );
-
-    if (!selectionIntersection) return;
-
-    const { anchor, focus } = selectionIntersection;
-
-    // NOTE: Don't remove when the text changes mark only
-    if (anchor.offset !== focus.offset) return;
-
-    onRemoveHighlight({
-      id: id!,
-      range: {
+    return [
+      {
         anchor: { path, offset: 0 },
         focus: { path, offset: text.length },
+        highlight: false,
       },
-    });
+    ];
   };
 
   const decorateEditor = ([node, path]: NodeEntry) => {
     if (editor.isHighlightedText(node) && editor.selection) {
-      removeHighlightOnTextChange(node, path);
+      return removeHighlightOnTextChange(node, path);
     }
 
     return [];
