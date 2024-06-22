@@ -1,22 +1,17 @@
-import { BaseRange, Descendant, NodeEntry } from "slate";
-import { ReactEditor } from "slate-react";
+import { Descendant } from "slate";
 import { IconType } from "react-icons";
+import { EditableProps } from "slate-react/dist/components/editable";
 
-export interface OnChangeRichtextEditorParams {
-  editor: ReactEditor;
-  value: Descendant[];
-}
+import { GrammarEditor } from "~/modules/grammar/pages/Grammar";
 
-export interface RichtextEditorProps {
+export interface RichTextEditorProps extends Omit<EditableProps, "onChange"> {
+  editor: GrammarEditor;
   initialValue?: Descendant[];
-  placeholder?: string;
-  className?: string;
-  decorate?: (entry: NodeEntry) => BaseRange[];
-  onChange?: (params: OnChangeRichtextEditorParams) => void;
-  onValueChange?: (params: OnChangeRichtextEditorParams) => void;
+  onChange?: (value: Descendant[]) => void;
+  onValueChange?: (value: Descendant[]) => void;
 }
 
-export interface RichtextButtonProps {
+export interface RichTextButtonProps {
   format: string;
   icon: IconType;
 }

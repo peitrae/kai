@@ -15,9 +15,7 @@ declare module "slate" {
     bold?: boolean;
     italic?: boolean;
     underline?: boolean;
-    highlight?: boolean;
     path?: Path;
-    id?: string;
   }
 
   export interface BaseRange extends Range {

@@ -1,5 +1,4 @@
-import { CSSProperties, useCallback, useEffect, useState } from "react";
-import { createEditor } from "slate";
+import { CSSProperties, useCallback, useEffect } from "react";
 import {
   Editable,
   ReactEditor,
@@ -7,7 +6,6 @@ import {
   RenderLeafProps,
   Slate,
   useSlate,
-  withReact,
 } from "slate-react";
 import {
   BsJustify,
@@ -23,23 +21,21 @@ import {
   BsTypeUnderline,
 } from "react-icons/bs";
 import classNames from "classnames";
-import { withHistory } from "slate-history";
 
+import styles from "./RichTextEditor.module.sass";
 import {
+  RichTextButtonProps,
+  RichTextEditorProps,
   HOTKEYS,
   TEXT_ALIGN_TYPES,
   isBlockActive,
   isMarkActive,
   toggleBlock,
   toggleMark,
-  withHtml,
-} from "./RichtextEditor.utils";
-
-import styles from "./RichtextEditor.module.sass";
-import { RichtextButtonProps, RichtextEditorProps } from ".";
+} from ".";
 import isHotkey, { KeyboardEventLike } from "is-hotkey";
 
-const RichtextMarkButton = ({ format, icon: Icon }: RichtextButtonProps) => {
+const RichTextMarkButton = ({ format, icon: Icon }: RichTextButtonProps) => {
   const editor = useSlate();
 
   return (
@@ -58,7 +54,7 @@ const RichtextMarkButton = ({ format, icon: Icon }: RichtextButtonProps) => {
   );
 };
 
-const RichtextBlockButton = ({ format, icon: Icon }: RichtextButtonProps) => {
+const RichTextBlockButton = ({ format, icon: Icon }: RichTextButtonProps) => {
   const editor = useSlate();
   return (
     <button
@@ -80,23 +76,27 @@ const RichtextBlockButton = ({ format, icon: Icon }: RichtextButtonProps) => {
   );
 };
 
-const RichtextToolbar = () => (
+const RichTextToolbar = () => (
   <div className={styles.toolbar}>
-    <RichtextMarkButton format="bold" icon={BsTypeBold} />
-    <RichtextMarkButton format="italic" icon={BsTypeItalic} />
-    <RichtextMarkButton format="underline" icon={BsTypeUnderline} />
-    <RichtextBlockButton format="heading-one" icon={BsTypeH1} />
-    <RichtextBlockButton format="heading-two" icon={BsTypeH2} />
-    <RichtextBlockButton format="numbered-list" icon={BsListOl} />
-    <RichtextBlockButton format="bulleted-list" icon={BsListUl} />
-    <RichtextBlockButton format="left" icon={BsJustifyLeft} />
-    <RichtextBlockButton format="center" icon={BsTextCenter} />
-    <RichtextBlockButton format="right" icon={BsJustifyRight} />
-    <RichtextBlockButton format="justify" icon={BsJustify} />
+    <RichTextMarkButton format="bold" icon={BsTypeBold} />
+    <RichTextMarkButton format="italic" icon={BsTypeItalic} />
+    <RichTextMarkButton format="underline" icon={BsTypeUnderline} />
+    <RichTextBlockButton format="heading-one" icon={BsTypeH1} />
+    <RichTextBlockButton format="heading-two" icon={BsTypeH2} />
+    <RichTextBlockButton format="numbered-list" icon={BsListOl} />
+    <RichTextBlockButton format="bulleted-list" icon={BsListUl} />
+    <RichTextBlockButton format="left" icon={BsJustifyLeft} />
+    <RichTextBlockButton format="center" icon={BsTextCenter} />
+    <RichTextBlockButton format="right" icon={BsJustifyRight} />
+    <RichTextBlockButton format="justify" icon={BsJustify} />
   </div>
 );
 
-const Element = ({ attributes, children, element }: RenderElementProps) => {
+export const RichTextElement = ({
+  attributes,
+  children,
+  element,
+}: RenderElementProps) => {
   const style: CSSProperties = { textAlign: element.align };
 
   switch (element.type) {
@@ -139,12 +139,14 @@ const Element = ({ attributes, children, element }: RenderElementProps) => {
   }
 };
 
-const Leaf = ({ attributes, children, leaf }: RenderLeafProps) => {
+export const RichTextLeaf = <T extends RenderLeafProps = RenderLeafProps>({
+  attributes,
+  children,
+  leaf,
+}: T) => {
   if (leaf.bold) children = <strong>{children}</strong>;
   if (leaf.italic) children = <em>{children}</em>;
   if (leaf.underline) children = <u>{children}</u>;
-  if (leaf.highlight)
-    children = <span className={styles.highlight}>{children}</span>;
 
   return <span {...attributes}>{children}</span>;
 };
@@ -156,27 +158,18 @@ const initial = [
   },
 ];
 
-const RichtextEditor = ({
+const RichTextEditor = ({
+  editor,
   initialValue = initial,
-  placeholder,
-  className,
-  decorate,
   onChange,
   onValueChange,
-}: RichtextEditorProps) => {
-  const [editor] = useState(() =>
-    withHtml(withReact(withHistory(createEditor())))
-  );
-
-  const renderElement = useCallback(
-    (props: RenderElementProps) => <Element {...props} />,
-    []
-  );
-
-  const renderLeaf = useCallback(
-    (props: RenderLeafProps) => <Leaf {...props} />,
-    []
-  );
+  className,
+  renderElement = (props: RenderElementProps) => <RichTextElement {...props} />,
+  renderLeaf = (props: RenderLeafProps) => <RichTextLeaf {...props} />,
+  ...rest
+}: RichTextEditorProps) => {
+  const renderElementCallback = useCallback(renderElement, []);
+  const renderLeafCallback = useCallback(renderLeaf, []);
 
   useEffect(() => ReactEditor.focus(editor), []);
 
@@ -194,20 +187,15 @@ const RichtextEditor = ({
       <Slate
         editor={editor}
         initialValue={initialValue}
-        onChange={onChange ? (value) => onChange({ value, editor }) : undefined}
-        onValueChange={
-          onValueChange
-            ? (value) => onValueChange({ value, editor })
-            : undefined
-        }
+        onChange={onChange}
+        onValueChange={onValueChange}
       >
-        <RichtextToolbar />
+        <RichTextToolbar />
         <Editable
+          {...rest}
           className={styles.editor}
-          placeholder={placeholder}
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          decorate={decorate}
+          renderElement={renderElementCallback}
+          renderLeaf={renderLeafCallback}
           onKeyDown={handleHotkey}
         />
       </Slate>
@@ -215,4 +203,4 @@ const RichtextEditor = ({
   );
 };
 
-export default RichtextEditor;
+export default RichTextEditor;

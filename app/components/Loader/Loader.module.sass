@@ -1,0 +1,14 @@
+.loader
+  width: 1em
+  height: 1em
+  border: 4px solid transparent
+  border-radius: 50%
+  border-top-color: currentColor
+  animation: spin 1s linear infinite
+  @apply tw-text-slate-500
+
+@keyframes spin
+  0%
+    transform: rotate(0deg)
+  100%
+    transform: rotate(360deg)

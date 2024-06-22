@@ -1,0 +1,50 @@
+.container
+  border-left: 1px solid
+  padding: 1rem 0
+  font-size: 0.875rem
+  display: flex
+  flex-direction: column
+  flex-shrink: 0
+
+  @apply tw-border-slate-700
+
+.header
+  display: flex
+  gap: 1rem
+  align-items: center
+  justify-content: space-between
+  padding: 0 1.5rem 1rem 1.5rem
+  border-bottom: 1px solid
+
+  @apply tw-border-slate-700
+
+.headerContent
+  display: flex
+  gap: 1rem
+  align-items: center
+
+.headerLoader
+  font-size: 1.25rem
+
+.title,
+.suggestionAmount
+  font-size: 0.875rem
+
+.title
+  font-weight: 600
+
+.suggestionAmount
+  height: 1.5rem
+  width: 1.5rem
+  border-radius: 1.5rem
+  display: flex
+  align-items: center
+  justify-content: center
+  padding-right: 1px
+  padding-top: 1px
+
+  @apply tw-bg-slate-500
+
+.accordion
+  height: 100%
+  overflow-y: auto

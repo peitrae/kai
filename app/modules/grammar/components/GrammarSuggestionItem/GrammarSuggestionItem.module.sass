@@ -1,0 +1,29 @@
+.container:first-child
+  border-top: none
+
+.container:hover
+  @apply tw-bg-slate-700
+
+.summary
+  display: flex
+  justify-content: space-between
+  align-items: center
+  height: 100%
+
+.summary .title
+  display: flex
+  align-items: center
+  min-height: 2rem
+
+.summary .actions
+  display: none
+
+.summary:hover .actions
+  display: flex
+
+.actions
+  display: flex
+  gap: 0.25rem
+
+.btnIgnore
+  @apply tw-text-slate-300

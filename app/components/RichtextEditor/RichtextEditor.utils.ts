@@ -4,7 +4,7 @@ import {
   BaseText,
   Descendant,
   Editor,
-  Transforms,
+  Node as SlateNode,
   Element as SlateElement,
 } from "slate";
 import { ReactEditor } from "slate-react";
@@ -74,13 +74,17 @@ export const isBlockActive = (
   return !!match;
 };
 
-export const toggleMark = (editor: BaseEditor, format: string) => {
+export const toggleMark = (
+  editor: BaseEditor,
+  format: string,
+  value: unknown = true
+) => {
   const isActive = isMarkActive(editor, format);
 
   if (isActive) {
-    Editor.removeMark(editor, format);
+    editor.removeMark(format);
   } else {
-    Editor.addMark(editor, format, true);
+    editor.addMark(format, value);
   }
 };
 
@@ -92,7 +96,7 @@ export const toggleBlock = (editor: BaseEditor, format: string) => {
   );
   const isList = LIST_TYPES.includes(format);
 
-  Transforms.unwrapNodes(editor, {
+  editor.unwrapNodes({
     match: (node) =>
       !Editor.isEditor(node) &&
       SlateElement.isElement(node) &&
@@ -111,15 +115,16 @@ export const toggleBlock = (editor: BaseEditor, format: string) => {
       type: isActive ? "paragraph" : isList ? "list-item" : format,
     };
   }
-  Transforms.setNodes<SlateElement>(editor, newProperties);
+
+  editor.setNodes(newProperties);
 
   if (!isActive && isList) {
     const block = { type: format, children: [] };
-    Transforms.wrapNodes(editor, block);
+    editor.wrapNodes(block);
   }
 };
 
-const deserialize = (
+export const deserialize = (
   el: HTMLElement
 ): (Descendant | null)[] | BaseElement | BaseText | null => {
   if (el.nodeType === Node.TEXT_NODE) {
@@ -175,7 +180,7 @@ export const withHtml = (editor: ReactEditor) => {
     if (html) {
       const parsed = new DOMParser().parseFromString(html, "text/html");
       const fragment = deserialize(parsed.body) as Descendant[];
-      Transforms.insertFragment(editor, fragment);
+      editor.insertFragment(fragment);
       return;
     }
 
@@ -183,4 +188,10 @@ export const withHtml = (editor: ReactEditor) => {
   };
 
   return editor;
+};
+
+export const getNodeTextParts = (node: SlateNode) => {
+  const text = SlateNode.string(node);
+  const parts = text.split(" ");
+  return { text, parts };
 };
