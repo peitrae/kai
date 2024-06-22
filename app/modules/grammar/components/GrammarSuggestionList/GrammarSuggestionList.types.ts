@@ -5,4 +5,5 @@ export interface GrammarSuggestionListProps
   extends HTMLAttributes<HTMLDivElement> {
   activeId?: string;
   suggestionMap: SuggestionMap;
+  isLoading?: boolean;
 }

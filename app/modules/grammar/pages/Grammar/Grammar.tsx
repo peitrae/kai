@@ -246,6 +246,7 @@ const Grammar = () => {
           onHighlightTextClick={(id) => setExpandSuggestionId(id)}
         />
         <GrammarSuggestionList
+          isLoading={fetcher.state === "submitting"}
           activeId={expandSuggestionId}
           suggestionMap={suggestionMap}
           className={styles.grammarSuggestionList}

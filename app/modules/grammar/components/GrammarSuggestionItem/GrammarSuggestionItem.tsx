@@ -16,29 +16,33 @@ import {
 } from ".";
 import { GrammarContext, GrammarContextValue } from "../../pages/Grammar";
 
-const GrammarSuggestionItemActions = forwardRef(
-  (
-    { onApply, onIgnore }: GrammarSuggestionItemActionsProps,
-    ref: ForwardedRef<HTMLDivElement>
-  ) => (
-    <div ref={ref} className={styles.actions}>
-      <Button size="sm" onClick={onApply}>
-        Apply
-      </Button>
-      <Button
-        className={styles.btnIgnore}
-        size="sm"
-        variant="text"
-        color="neutral"
-        onClick={onIgnore}
-      >
-        Ignore
-      </Button>
-    </div>
-  )
+const GrammarSuggestionItemActions = ({
+  onApply,
+  onIgnore,
+  disabled,
+}: GrammarSuggestionItemActionsProps) => (
+  <div className={styles.actions}>
+    <Button size="sm" disabled={disabled} onClick={onApply}>
+      Apply
+    </Button>
+    <Button
+      className={styles.btnIgnore}
+      size="sm"
+      variant="text"
+      color="neutral"
+      onClick={onIgnore}
+      disabled={disabled}
+    >
+      Ignore
+    </Button>
+  </div>
 );
 
-const GrammarSuggestionItem = ({ id, data }: GrammarSuggestionItemProps) => {
+const GrammarSuggestionItem = ({
+  id,
+  data,
+  isLoading,
+}: GrammarSuggestionItemProps) => {
   const { range, suggestedText, incorrectText } = data;
   const { activeId } = useAccordion();
   const { onApplySuggestion, onRemoveHighlight } = useContext(
@@ -62,12 +66,20 @@ const GrammarSuggestionItem = ({ id, data }: GrammarSuggestionItemProps) => {
         ) : (
           <>
             <span className={styles.title}>{incorrectText}</span>
-            <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
+            <GrammarSuggestionItemActions
+              onApply={apply}
+              onIgnore={ignore}
+              disabled={isLoading}
+            />
           </>
         )}
       </AccordionButton>
       <AccordionPanel>
-        <GrammarSuggestionItemActions onApply={apply} onIgnore={ignore} />
+        <GrammarSuggestionItemActions
+          onApply={apply}
+          onIgnore={ignore}
+          disabled={isLoading}
+        />
       </AccordionPanel>
     </AccordionItem>
   );
